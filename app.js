@@ -22,7 +22,7 @@ const db = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
-    database: 'c237_025_regapp_ca2team3',
+    database: 'c237_025_ca2team3',
     ssl: {
         rejectUnauthorized: false
     }
@@ -162,8 +162,37 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
     res.render('dashboard', { user: req.session.user });
 });
 //******** TODO: Insert code for admin route to render dashboard page for admin. ********//
-app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('admin', { user: req.session.user });
+app.get('/user', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('user', { user: req.session.user });
+});
+
+// ** ADDING A NEW ANIMAL - user does it ** //
+app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('addAnimal', {user: req.session.user } ); 
+});
+
+app.post('/addAnimal', upload.single('image'),  (req, res) => {
+    // Extract animal data from the request body
+    const { name, species, injuryLocation} = req.body;
+    let image;
+    if (req.file) {
+        image = req.file.filename; // Save only the filename
+    } else {
+        image = null;
+    }
+
+    const sql = 'INSERT INTO animals (name, species, injuryLocation, image) VALUES (?, ?, ?, ?)';
+    // Insert the new animal into the database
+    connection.query(sql , [name, species, injuryLocation, image], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error adding animal:", error);
+            res.status(500).send('Error adding animal');
+        } else {
+            // Send a success response
+            res.redirect('/inventory');
+        }
+    });
 });
 
 //******** TODO: Insert code for logout route ********//
