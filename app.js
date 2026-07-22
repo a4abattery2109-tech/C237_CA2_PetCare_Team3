@@ -1,59 +1,46 @@
 const express = require('express');
 const mysql = require('mysql2');
+// use this for the team github thing
+const path = require("path");
+//******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
+
 const flash = require('connect-flash');
-const multer = require('multer');
+
 const app = express();
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/images'); // Directory to save uploaded files
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({ storage: storage });
-
-// // Localhost MySQL connection
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'RP738964$',
-//     database: 'c237_supermarketdb'
+// Local connection
+//const db = mysql.createConnection({
+    //host: 'localhost',
+    //user: 'root',
+    //password: 'RP738964$',
+    //database: 'C237_usersdb'
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
-const connection = mysql.createConnection({
+const db = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
-    database: 'c237_025_ca2team3',
+    database: 'c237_025_supermarketdb_ca2team3',
     ssl: {
         rejectUnauthorized: false
     }
 });
 
-connection.connect((err) => {
+
+db.connect((err) => {
     if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
+        throw err;
     }
-    console.log('Connected to MySQL database');
+    console.log('Connected to database');
 });
 
-// Set up view engine
-app.set('view engine', 'ejs');
-//  enable static files
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
-// enable form processing
-app.use(express.urlencoded({
-    extended: false
-}));
-
-//TO DO: Insert code for Session Middleware below 
+// use this for the team github thing
+app.use("/images", express.static(path.join(__dirname, "images")));
+//******** TODO: Insert code for Session Middleware below ********//
 app.use(session({
     secret: 'secret',
     resave: false,
@@ -64,7 +51,10 @@ app.use(session({
 
 app.use(flash());
 
-// Middleware to check if user is logged in
+// Setting up EJS
+app.set('view engine', 'ejs');
+
+//******** TODO: Create a Middleware to check if user is logged in. ********//
 const checkAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
@@ -73,33 +63,15 @@ const checkAuthenticated = (req, res, next) => {
         res.redirect('/login');
     }
 };
-
-// Middleware to check if user is admin
+//******** TODO: Create a Middleware to check if user is admin. ********//
 const checkAdmin = (req, res, next) => {
     if (req.session.user.role === 'admin') {
         return next();
     } else {
         req.flash('error', 'Access denied');
-        res.redirect('/shopping');
+        res.redirect('/dashboard');
     }
 };
-
-// Middleware for form validation
-const validateRegistration = (req, res, next) => {
-    const { username, email, password, address, contact, role } = req.body;
-
-    if (!username || !email || !password || !address || !contact || !role) {
-        return res.status(400).send('All fields are required.');
-    }
-
-    if (password.length < 6) {
-        req.flash('error', 'Password should be at least 6 or more characters long');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
-    }
-    next();
-};
-
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
