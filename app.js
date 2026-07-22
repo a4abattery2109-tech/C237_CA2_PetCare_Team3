@@ -109,6 +109,10 @@ app.get('/about', (req, res) => {
     res.render('about', { user: req.session.user });
 });
 
+app.get('/ourteam', (req, res) => {
+    res.render('ourteam', { user: req.session.user });
+});
+
 app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
