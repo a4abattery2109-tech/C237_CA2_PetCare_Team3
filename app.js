@@ -6,8 +6,21 @@ const path = require("path");
 const session = require('express-session');
 
 const flash = require('connect-flash');
+const multer = require('multer');
 
 const app = express();
+
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/images'); // Directory to save uploaded files
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
 
 // Local connection
 //const db = mysql.createConnection({
@@ -22,7 +35,7 @@ const db = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
-    database: 'c237_025_regapp_ca2team3',
+    database: 'c237_025_ca2team3',
     ssl: {
         rejectUnauthorized: false
     }
@@ -40,6 +53,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
+
+// Setting up EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 //******** TODO: Insert code for Session Middleware below ********//
 app.use(session({
     secret: 'secret',
@@ -50,9 +68,6 @@ app.use(session({
 }));
 
 app.use(flash());
-
-// Setting up EJS
-app.set('view engine', 'ejs');
 
 //******** TODO: Create a Middleware to check if user is logged in. ********//
 const checkAuthenticated = (req, res, next) => {
@@ -175,6 +190,38 @@ app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
 });
+
+// //******** TODO: Insert code for adding an animal ********//
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
+    res.render('addAnimal', {user: req.session.user } ); 
+});
+
+app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+    // Extract animal data from the request body
+    const { animalName, species, injuryLocation, comments } = req.body;
+    let image;
+    if (req.file) {
+        image = req.file.filename; // Save only the filename
+    } else {
+        image = null;
+    }
+
+    const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
+    // Insert the new animal into the database
+    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error adding animal:", error);
+            req.flash('error', 'Error adding animal to database');
+            res.redirect('/addAnimal');
+        } else {
+            // Send a success response
+            req.flash('success', 'Animal added successfully!');
+            res.redirect('/viewAnimal');
+        }
+    });
+});
+
 
 app.get('/filter', (req, res) => {
     const { rating, keyword } = req.query;
