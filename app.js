@@ -22,7 +22,7 @@ const db = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
-    database: 'c237_025_regapp_ca2team3',
+    database: 'c237_025_supermarketdb_ca2team3',
     ssl: {
         rejectUnauthorized: false
     }
@@ -89,23 +89,6 @@ app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
 
-
-//******** TODO: Create a middleware function validateRegistration ********//
-const validateRegistration = (req, res, next) => {
-    const { username, email, password, address, contact } = req.body;
-    if (!username || !email || !password || !address || !contact) {
-        return res.send('All fields are required.');
-    }
-    if (password.length < 6) {
-        req.flash('error', 'Password should be at least 6 or more characters long');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
-    }
-    //If all validations pass, the next function is called, allowing the request to proceed to the
-    //next middleware function or route handler.
-    next();
-};
-
 app.post('/about', (req, res) => {
     res.render('about', { user: req.session.user });
 });
@@ -116,7 +99,7 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
             throw err;
         }
@@ -145,7 +128,7 @@ app.post('/login', (req, res) => {
         return res.redirect('/login');
     }
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    db.query(sql, [email, password], (err, results) => {
+    connection.query(sql, [email, password], (err, results) => {
         if (err) {
             throw err;
         }
@@ -166,8 +149,39 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
     res.render('dashboard', { user: req.session.user });
 });
 //******** TODO: Insert code for admin route to render dashboard page for admin. ********//
-app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('admin', { user: req.session.user });
+app.get('/user', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('user', { user: req.session.user });
+});
+
+// ** ADDING A NEW ANIMAL - user does it ** //
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
+    res.render('addAnimal', {user: req.session.user } ); 
+});
+
+app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+    // Extract animal data from the request body
+    const { name, species, injuryLocation} = req.body;
+    let image;
+    if (req.file) {
+        image = req.file.filename; // Save only the filename
+    } else {
+        image = null;
+    }
+
+    const sql = 'INSERT INTO animals (name, species, injuryLocation, image) VALUES (?, ?, ?, ?)';
+    // Insert the new animal into the database
+    connection.query(sql , [name, species, injuryLocation, image], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error adding animal:", error);
+            req.flash('error', 'Error adding animal to database');
+            res.redirect('/addAnimal');
+        } else {
+            // Send a success response
+            req.flash('success', 'Animal added successfully!');
+            res.redirect('/user');
+        }
+    });
 });
 
 //******** TODO: Insert code for logout route ********//
