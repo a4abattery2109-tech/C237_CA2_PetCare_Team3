@@ -117,23 +117,6 @@ app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
 
-
-//******** TODO: Create a middleware function validateRegistration ********//
-const validateRegistration = (req, res, next) => {
-    const { username, email, password, address, contact } = req.body;
-    if (!username || !email || !password || !address || !contact) {
-        return res.send('All fields are required.');
-    }
-    if (password.length < 6) {
-        req.flash('error', 'Password should be at least 6 or more characters long');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
-    }
-    //If all validations pass, the next function is called, allowing the request to proceed to the
-    //next middleware function or route handler.
-    next();
-};
-
 app.post('/about', (req, res) => {
     res.render('about', { user: req.session.user });
 });
@@ -144,7 +127,7 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
             throw err;
         }
@@ -173,7 +156,7 @@ app.post('/login', (req, res) => {
         return res.redirect('/login');
     }
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    db.query(sql, [email, password], (err, results) => {
+    connection.query(sql, [email, password], (err, results) => {
         if (err) {
             throw err;
         }
@@ -199,11 +182,11 @@ app.get('/user', checkAuthenticated, checkAdmin, (req, res) => {
 });
 
 // ** ADDING A NEW ANIMAL - user does it ** //
-app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
     res.render('addAnimal', {user: req.session.user } ); 
 });
 
-app.post('/addAnimal', upload.single('image'),  (req, res) => {
+app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
     // Extract animal data from the request body
     const { name, species, injuryLocation} = req.body;
     let image;
@@ -219,10 +202,12 @@ app.post('/addAnimal', upload.single('image'),  (req, res) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
-            res.status(500).send('Error adding animal');
+            req.flash('error', 'Error adding animal to database');
+            res.redirect('/addAnimal');
         } else {
             // Send a success response
-            res.redirect('/inventory');
+            req.flash('success', 'Animal added successfully!');
+            res.redirect('/user');
         }
     });
 });
