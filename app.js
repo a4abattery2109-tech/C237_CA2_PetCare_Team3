@@ -101,7 +101,11 @@ app.get('/ourteam', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
+    res.render('register', {
+        errors: req.flash('error'),
+        messages: req.flash('success'),
+        formData: req.flash('formData')[0] || {}
+    });
 });
 
 
@@ -109,7 +113,9 @@ app.get('/register', (req, res) => {
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
-        return res.send('All fields are required.');
+        req.flash('error', 'All fields are required.');
+        req.flash('formData', req.body);
+        return res.redirect('/register');
     }
     if (password.length < 6) {
         req.flash('error', 'Password should be at least 6 or more characters long');
@@ -133,9 +139,17 @@ app.post('/register', validateRegistration, (req, res) => {
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
     db.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
-            throw err;
+            console.error('Registration error:', err);
+            // Handle common cases like duplicate email gracefully
+            if (err.code === 'ER_DUP_ENTRY') {
+                req.flash('error', 'An account with that email already exists.');
+            } else {
+                req.flash('error', 'Registration failed. Please try again later.');
+            }
+            req.flash('formData', req.body);
+            return res.redirect('/register');
         }
-        console.log(result);
+        console.log('User registered:', result.insertId);
         req.flash('success', 'Registration successful! Please log in.');
         res.redirect('/login');
     });
