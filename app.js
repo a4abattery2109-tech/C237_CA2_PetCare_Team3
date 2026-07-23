@@ -228,11 +228,12 @@ app.get('/contact', (req, res) => {
     
 });
 
-app.post('/submit', (req, res) => {
-    const { name, email, contact, comments, title, description, date, priority } = req.body;
-    res.render('confirm', { name, email, contact, comments, title, description, date, priority });
+app.post('/contact', (req, res) => {
+    const { name, email, contact, comments } = req.body;
+    res.render('confirm', { name, email, contact, comments});
 });
 
+// define a route to render filtering
 app.get('/filter', (req, res) => {
     const { rating, keyword } = req.query;
     let filteredCafes = cafes;
