@@ -3,10 +3,6 @@ const mysql = require('mysql2');
 const session = require('express-session');
 const flash = require('connect-flash');
 const multer = require('multer');
-<<<<<<< HEAD
-=======
-
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 const app = express();
 
 // Set up multer for file uploads
@@ -20,23 +16,6 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-
-<<<<<<< HEAD
-// // Localhost MySQL connection
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'RP738964$',
-//     database: 'c237_supermarketdb'
-=======
-// Local connection
-//const db = mysql.createConnection({
-    //host: 'localhost',
-    //user: 'root',
-    //password: 'RP738964$',
-    //database: 'C237_usersdb'
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
-// });
 
 // [C237-025] Database connection to Azure MySQL Database
 const connection = mysql.createConnection({
@@ -61,11 +40,6 @@ connection.connect((err) => {
 app.set('view engine', 'ejs');
 //  enable static files
 app.use(express.static('public'));
-<<<<<<< HEAD
-// enable form processing
-app.use(express.urlencoded({
-    extended: false
-}));
 
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
@@ -103,7 +77,7 @@ const checkAdmin = (req, res, next) => {
         res.redirect('/dashboard');
     }
 };
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
+
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -236,8 +210,7 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
             req.flash('success', 'Animal added successfully!');
             res.redirect('/viewAnimal');
         }
-    });
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
+    }); 
 });
 
 
