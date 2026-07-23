@@ -24,10 +24,10 @@ const upload = multer({ storage: storage });
 
 // Local connection
 //const db = mysql.createConnection({
-    //host: 'localhost',
-    //user: 'root',
-    //password: 'RP738964$',
-    //database: 'C237_usersdb'
+//host: 'localhost',
+//user: 'root',
+//password: 'RP738964$',
+//database: 'C237_usersdb'
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
@@ -192,13 +192,13 @@ app.get('/logout', (req, res) => {
 });
 
 // //******** TODO: Insert code for adding an animal ********//
-app.get('/addAnimal', checkAuthenticated, (req, res) => {
-    res.render('addAnimal', {user: req.session.user } ); 
+app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('addProduct', { user: req.session.user });
 });
 
-app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
-    // Extract animal data from the request body
-    const { animalName, species, injuryLocation, comments } = req.body;
+app.post('/addAnimal', upload.single('image'), (req, res) => {
+    // Extract product data from the request body
+    const { animalName, species, injuryLocation } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -206,18 +206,18 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
-    // Insert the new animal into the database
-    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
+    const sql = 'INSERT INTO products (productName, quantity, price, image) VALUES (?, ?, ?, ?)';
+    // Insert the new product into the database
+    connection.query(sql, [name, quantity, price, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
-            console.error("Error adding animal:", error);
-            req.flash('error', 'Error adding animal to database');
-            res.redirect('/addAnimal');
+            console.error("Error adding product:", error);
+            res.status(500).send('Error adding product');
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
             res.redirect('/animal');
+            res.redirect('/inventory');
         }
     });
 });
