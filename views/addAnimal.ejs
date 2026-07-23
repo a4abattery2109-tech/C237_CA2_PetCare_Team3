@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="icon" type="image/png" href="/images/SnugglyBubblyPaws.png">
     <title>Snuggly Bubbly Paws</title>
@@ -8,6 +9,41 @@
 
 <body>
     <%- include('partials/header') %>
+<<<<<<< HEAD
     
+=======
+        <div class="container mt-4">
+            <h2 class="text-center mb-4">Add New Animal</h2>
+            <form action="/addAnimal" method="POST" enctype="multipart/form-data" class="mx-auto"
+                style="max-width: 500px;">
+
+                <div class="mb-3">
+                    <label for="animalName" class="form-label">Animal Name</label>
+                    <input type="text" class="form-control" id="animalName" name="animalName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="species" class="form-label">Animal Species</label>
+                    <input type="text" class="form-control" id="species" name="species" required>
+                </div>
+                <div class="mb-3">
+                    <label for="injuryLocation" class="form-label">Injury location</label>
+                    <input type="text" class="form-control" id="injuryLocation" name="injuryLocation" min="0" step="1"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label for="image" class="form-label">Injury Image</label>
+                    <input class="form-control" type="file" id="image" name="image" accept="image/*" required>
+                </div>
+                <div class="mb-3">
+                    <label for="comments" class="form-label">Comments</label>
+                    <input type="text" class="form-control" id="comments" name="comments" required>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Add Animal</button>
+                </div>
+            </form>
+        </div>
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 </body>
+
 </html>

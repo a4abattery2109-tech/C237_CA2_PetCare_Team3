@@ -3,6 +3,10 @@ const mysql = require('mysql2');
 const session = require('express-session');
 const flash = require('connect-flash');
 const multer = require('multer');
+<<<<<<< HEAD
+=======
+
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 const app = express();
 
 // Set up multer for file uploads
@@ -17,12 +21,21 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+<<<<<<< HEAD
 // // Localhost MySQL connection
 // const connection = mysql.createConnection({
 //     host: 'localhost',
 //     user: 'root',
 //     password: 'RP738964$',
 //     database: 'c237_supermarketdb'
+=======
+// Local connection
+//const db = mysql.createConnection({
+    //host: 'localhost',
+    //user: 'root',
+    //password: 'RP738964$',
+    //database: 'C237_usersdb'
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
@@ -30,7 +43,7 @@ const connection = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
-    database: 'c237_025_supermarketdb_ca2team3',
+    database: 'c237_025_ca2team3',
     ssl: {
         rejectUnauthorized: false
     }
@@ -48,11 +61,50 @@ connection.connect((err) => {
 app.set('view engine', 'ejs');
 //  enable static files
 app.use(express.static('public'));
+<<<<<<< HEAD
 // enable form processing
 app.use(express.urlencoded({
     extended: false
 }));
 
+=======
+// use this for the team github thing
+app.use("/images", express.static(path.join(__dirname, "images")));
+
+// Setting up EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+//******** TODO: Insert code for Session Middleware below ********//
+app.use(session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: true,
+    // Session expires after 1 week of inactivity
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
+}));
+
+app.use(flash());
+
+//******** TODO: Create a Middleware to check if user is logged in. ********//
+const checkAuthenticated = (req, res, next) => {
+    if (req.session.user) {
+        return next();
+    } else {
+        req.flash('error', 'Please log in to view this resource');
+        res.redirect('/login');
+    }
+};
+//******** TODO: Create a Middleware to check if user is admin. ********//
+const checkAdmin = (req, res, next) => {
+    if (req.session.user.role === 'admin') {
+        return next();
+    } else {
+        req.flash('error', 'Access denied');
+        res.redirect('/dashboard');
+    }
+};
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -149,6 +201,8 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 //******** TODO: Insert code for admin route to render dashboard page for admin. ********//
 app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
     res.render('admin', { user: req.session.user });
+<<<<<<< HEAD
+=======
 });
 
 //******** TODO: Insert code for logout route ********//
@@ -156,6 +210,39 @@ app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
 });
+
+// //******** TODO: Insert code for adding an animal ********//
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
+    res.render('addAnimal', {user: req.session.user } ); 
+});
+
+app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+    // Extract animal data from the request body
+    const { animalName, species, injuryLocation, comments } = req.body;
+    let image;
+    if (req.file) {
+        image = req.file.filename; // Save only the filename
+    } else {
+        image = null;
+    }
+
+    const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
+    // Insert the new animal into the database
+    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error adding animal:", error);
+            req.flash('error', 'Error adding animal to database');
+            res.redirect('/addAnimal');
+        } else {
+            // Send a success response
+            req.flash('success', 'Animal added successfully!');
+            res.redirect('/viewAnimal');
+        }
+    });
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
+});
+
 
 app.get('/filter', (req, res) => {
     const { rating, keyword } = req.query;
