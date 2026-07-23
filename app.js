@@ -198,7 +198,7 @@ app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
 
 app.post('/addAnimal', upload.single('image'), (req, res) => {
     // Extract product data from the request body
-    const { animalName, species, injuryLocation } = req.body;
+    const { animalName, species, injuryLocation, location } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -206,13 +206,13 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
         image = null;
     }
 
-    const sql = 'INSERT INTO products (productName, quantity, price, image) VALUES (?, ?, ?, ?)';
+    const sql = 'INSERT INTO products (animalName, species, injuryLocation, location, image) VALUES (?, ?, ?, ?, ?)';
     // Insert the new product into the database
-    connection.query(sql, [name, quantity, price, image], (error, results) => {
+    connection.query(sql, [animalName, species, injuryLocation, location, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
-            console.error("Error adding product:", error);
-            res.status(500).send('Error adding product');
+            console.error("Error adding animal:", error);
+            res.status(500).send('Error adding animal');
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
