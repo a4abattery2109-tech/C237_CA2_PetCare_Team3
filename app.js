@@ -194,6 +194,7 @@ app.post('/login', (req, res) => {
         }
     });
 });
+
 //******** TODO: Insert code for dashboard route to render dashboard page for users. ********//
 app.get('/dashboard', checkAuthenticated, (req, res) => {
     res.render('dashboard', { user: req.session.user });
@@ -201,8 +202,6 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 //******** TODO: Insert code for admin route to render dashboard page for admin. ********//
 app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
     res.render('admin', { user: req.session.user });
-<<<<<<< HEAD
-=======
 });
 
 //******** TODO: Insert code for logout route ********//
@@ -213,10 +212,10 @@ app.get('/logout', (req, res) => {
 
 // //******** TODO: Insert code for adding an animal ********//
 app.get('/addAnimal', checkAuthenticated, (req, res) => {
-    res.render('addAnimal', {user: req.session.user } ); 
+    res.render('addAnimal', { user: req.session.user });
 });
 
-app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
     const { animalName, species, injuryLocation, comments } = req.body;
     let image;
@@ -228,7 +227,7 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
 
     const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
+    connection.query(sql, [animalName, species, injuryLocation, comments, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
@@ -240,9 +239,7 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
             res.redirect('/animal');
         }
     });
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 });
-
 
 app.get('/filter', (req, res) => {
     const { rating, keyword } = req.query;
