@@ -31,7 +31,7 @@ const upload = multer({ storage: storage });
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
-const db = mysql.createConnection({
+const connection = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
@@ -42,7 +42,7 @@ const db = mysql.createConnection({
 });
 
 
-db.connect((err) => {
+connection.connect((err) => {
     if (err) {
         throw err;
     }
@@ -131,7 +131,7 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
             throw err;
         }
@@ -160,7 +160,7 @@ app.post('/login', (req, res) => {
         return res.redirect('/login');
     }
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    db.query(sql, [email, password], (err, results) => {
+    connection.query(sql, [email, password], (err, results) => {
         if (err) {
             throw err;
         }
@@ -206,7 +206,7 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
         image = null;
     }
 
-    const sql = 'INSERT INTO products (animalName, species, injury, image) VALUES (?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO products (animalName, species, injury, image) VALUES (?, ?, ?, ?)';
     // Insert the new product into the database
     connection.query(sql, [animalName, species, injury, image], (error, results) => {
         if (error) {
