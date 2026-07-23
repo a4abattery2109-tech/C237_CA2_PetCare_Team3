@@ -1,8 +1,13 @@
 const express = require('express');
 const mysql = require('mysql2');
+// use this for the team github thing
+const path = require("path");
+//******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
+
 const flash = require('connect-flash');
 const multer = require('multer');
+
 const app = express();
 
 // Set up multer for file uploads
@@ -17,8 +22,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Local connection
+//const db = mysql.createConnection({
+    //host: 'localhost',
+    //user: 'root',
+    //password: 'RP738964$',
+    //database: 'C237_usersdb'
+// });
+
 // [C237-025] Database connection to Azure MySQL Database
-const connection = mysql.createConnection({
+const db = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
@@ -28,19 +41,16 @@ const connection = mysql.createConnection({
     }
 });
 
-connection.connect((err) => {
+
+db.connect((err) => {
     if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
+        throw err;
     }
-    console.log('Connected to MySQL database');
+    console.log('Connected to database');
 });
 
-// Set up view engine
-app.set('view engine', 'ejs');
-//  enable static files
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
-
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
 
@@ -77,7 +87,6 @@ const checkAdmin = (req, res, next) => {
         res.redirect('/dashboard');
     }
 };
-
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -208,9 +217,9 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
-            res.redirect('/viewAnimal');
+            res.redirect('/animal');
         }
-    }); 
+    });
 });
 
 
