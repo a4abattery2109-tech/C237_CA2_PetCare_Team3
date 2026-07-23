@@ -221,7 +221,9 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
         }
     });
 });
-
+app.get('/addAppointment', checkAuthenticated, (req, res) => {
+    res.render('addAppointment', {user: req.session.user } ); 
+});
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
     res.render('contact');
