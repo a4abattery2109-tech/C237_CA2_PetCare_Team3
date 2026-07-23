@@ -1,10 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2');
-// use this for the team github thing
-const path = require("path");
-//******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
-
 const flash = require('connect-flash');
 const multer = require('multer');
 
@@ -22,16 +18,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// // Localhost MySQL connection
+// const connection = mysql.createConnection({
+//     host: 'localhost',
+//     user: 'root',
+//     password: 'RP738964$',
+//     database: 'c237_supermarketdb'
 // Local connection
 //const db = mysql.createConnection({
-//host: 'localhost',
-//user: 'root',
-//password: 'RP738964$',
-//database: 'C237_usersdb'
+    //host: 'localhost',
+    //user: 'root',
+    //password: 'RP738964$',
+    //database: 'C237_usersdb'
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
-const db = mysql.createConnection({
+const connection = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
@@ -41,16 +43,23 @@ const db = mysql.createConnection({
     }
 });
 
-
-db.connect((err) => {
+connection.connect((err) => {
     if (err) {
-        throw err;
+        console.error('Error connecting to MySQL:', err);
+        return;
     }
-    console.log('Connected to database');
+    console.log('Connected to MySQL database');
 });
 
-app.use(express.urlencoded({ extended: false }));
+// Set up view engine
+app.set('view engine', 'ejs');
+//  enable static files
 app.use(express.static('public'));
+// enable form processing
+app.use(express.urlencoded({
+    extended: false
+}));
+
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
 
@@ -206,13 +215,13 @@ app.get('/logout', (req, res) => {
 });
 
 // //******** TODO: Insert code for adding an animal ********//
-app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('addProduct', { user: req.session.user });
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
+    res.render('addAnimal', {user: req.session.user } ); 
 });
 
-app.post('/addAnimal', upload.single('image'), (req, res) => {
-    // Extract product data from the request body
-    const { animalName, species, injuryLocation, location } = req.body;
+app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+    // Extract animal data from the request body
+    const { animalName, species, injuryLocation, comments } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -220,18 +229,18 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
         image = null;
     }
 
-    const sql = 'INSERT INTO products (animalName, species, injuryLocation, location, image) VALUES (?, ?, ?, ?, ?)';
-    // Insert the new product into the database
-    connection.query(sql, [animalName, species, injuryLocation, location, image], (error, results) => {
+    const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
+    // Insert the new animal into the database
+    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
-            res.status(500).send('Error adding animal');
+            req.flash('error', 'Error adding animal to database');
+            res.redirect('/addAnimal');
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
-            res.redirect('/animal');
-            res.redirect('/inventory');
+            res.redirect('/viewAnimal');
         }
     });
 });
