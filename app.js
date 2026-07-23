@@ -208,7 +208,7 @@ app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (
 
     const sql = 'INSERT INTO animal (animalName, species, injury, image) VALUES (?, ?, ?, ?)';
     // Insert the new animal into the database
-    db.query(sql, [animalName, species, injury, image], (error, results) => {
+    connection.query(sql, [animalName, species, injury, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
@@ -265,6 +265,7 @@ app.get('/filter', (req, res) => {
     }
     res.render('filter', { cafes: filteredCafes, rating, keyword });
 });
+
 // Starting the server
 app.listen(3000, () => {
     console.log('Server started on port http://localhost:3000');
