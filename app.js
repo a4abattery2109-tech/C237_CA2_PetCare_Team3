@@ -231,6 +231,16 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
     });
 });
 
+//Define a route to render the contact us page
+app.get('/contact', (req, res) => {
+    res.render('contact');
+    
+});
+
+app.post('/submit', (req, res) => {
+    const { name, email, contact, comments, title, description, date, priority } = req.body;
+    res.render('confirm', { name, email, contact, comments, title, description, date, priority });
+});
 
 app.get('/filter', (req, res) => {
     const { rating, keyword } = req.query;
