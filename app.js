@@ -1,13 +1,12 @@
 const express = require('express');
 const mysql = require('mysql2');
-// use this for the team github thing
-const path = require("path");
-//******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
-
 const flash = require('connect-flash');
 const multer = require('multer');
+<<<<<<< HEAD
+=======
 
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 const app = express();
 
 // Set up multer for file uploads
@@ -22,16 +21,25 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+<<<<<<< HEAD
+// // Localhost MySQL connection
+// const connection = mysql.createConnection({
+//     host: 'localhost',
+//     user: 'root',
+//     password: 'RP738964$',
+//     database: 'c237_supermarketdb'
+=======
 // Local connection
 //const db = mysql.createConnection({
     //host: 'localhost',
     //user: 'root',
     //password: 'RP738964$',
     //database: 'C237_usersdb'
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
-const db = mysql.createConnection({
+const connection = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
@@ -41,16 +49,25 @@ const db = mysql.createConnection({
     }
 });
 
-
-db.connect((err) => {
+connection.connect((err) => {
     if (err) {
-        throw err;
+        console.error('Error connecting to MySQL:', err);
+        return;
     }
-    console.log('Connected to database');
+    console.log('Connected to MySQL database');
 });
 
-app.use(express.urlencoded({ extended: false }));
+// Set up view engine
+app.set('view engine', 'ejs');
+//  enable static files
 app.use(express.static('public'));
+<<<<<<< HEAD
+// enable form processing
+app.use(express.urlencoded({
+    extended: false
+}));
+
+=======
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
 
@@ -87,6 +104,7 @@ const checkAdmin = (req, res, next) => {
         res.redirect('/dashboard');
     }
 };
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -183,6 +201,8 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 //******** TODO: Insert code for admin route to render dashboard page for admin. ********//
 app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
     res.render('admin', { user: req.session.user });
+<<<<<<< HEAD
+=======
 });
 
 //******** TODO: Insert code for logout route ********//
@@ -220,6 +240,7 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
             res.redirect('/animal');
         }
     });
+>>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 });
 
 
