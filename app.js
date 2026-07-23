@@ -31,7 +31,7 @@ const upload = multer({ storage: storage });
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
-const db = mysql.createConnection({
+const connection = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
     user: 'c237_025',
     password: 'c237025@2026!',
@@ -42,7 +42,7 @@ const db = mysql.createConnection({
 });
 
 
-db.connect((err) => {
+connection.connect((err) => {
     if (err) {
         throw err;
     }
@@ -131,7 +131,7 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
             throw err;
         }
@@ -160,7 +160,7 @@ app.post('/login', (req, res) => {
         return res.redirect('/login');
     }
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    db.query(sql, [email, password], (err, results) => {
+    connection.query(sql, [email, password], (err, results) => {
         if (err) {
             throw err;
         }
@@ -193,12 +193,12 @@ app.get('/logout', (req, res) => {
 
 // //******** TODO: Insert code for adding an animal ********//
 app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('addProduct', { user: req.session.user });
+    res.render('addAnimal', { user: req.session.user });
 });
 
-app.post('/addAnimal', upload.single('image'), (req, res) => {
-    // Extract product data from the request body
-    const { animalName, species, injury, location } = req.body;
+app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
+    // Extract animal data from the request body
+    const { animalName, species, injury } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -206,9 +206,9 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
         image = null;
     }
 
-    const sql = 'INSERT INTO products (animalName, species, injury, image) VALUES (?, ?, ?, ?, ?)';
-    // Insert the new product into the database
-    connection.query(sql, [animalName, species, injury, image], (error, results) => {
+    const sql = 'INSERT INTO animal (animalName, species, injury, image) VALUES (?, ?, ?, ?)';
+    // Insert the new animal into the database
+    db.query(sql, [animalName, species, injury, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
@@ -217,17 +217,24 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
             res.redirect('/animal');
-            res.redirect('/inventory');
         }
     });
 });
+
+// Define a route to render the appointments page
 app.get('/addAppointment', checkAuthenticated, (req, res) => {
-    res.render('addAppointment', {user: req.session.user } ); 
+    res.render('addAppointments', { user: req.session.user });
 });
+
+app.post('/addAppointment', checkAuthenticated, (req, res) => {
+    // Placeholder submit route so the form posts cleanly until DB logic is added.
+    req.flash('success', 'Appointment form submitted.');
+    res.redirect('/addAppointment');
+});
+
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
-    res.render('contact');
- 
+    res.render('contact', { user: req.session.user });
 });
 
 app.post('/contact', (req, res) => {
