@@ -1,57 +1,66 @@
 <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
   <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center" href="/"> <!-- Use this for the team GitHub thing -->
-      <img src="/images/SnugglyBubblyPaws.png" alt="Snuggly Bubbly Paws Logo" width="40" height="40"
-        class="me-2"><!-- Use this for the team GitHub thing -->
+    <a class="navbar-brand d-flex align-items-center" href="/">
+      <img src="/images/SnugglyBubblyPaws.png" alt="Snuggly Bubbly Paws Logo" width="40" height="40" class="me-2">
       Snuggly Bubbly Paws
-    </a><!-- Use this for the team GitHub thing -->
+    </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-      <span class="navbar-toggler-icon">Snuggly Bubbly Paws</span>
+      <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="collapsibleNavbar">
       <ul class="navbar-nav">
         <li class="nav-item">
           <a class="nav-link" href="/">Home</a>
         </li>
+
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Who We Are
           </a>
           <ul class="dropdown-menu">
             <li>
-              <a class="dropdown-item" href="/about">
-                About Us
-              </a>
+              <a class="dropdown-item" href="/about">About Us</a>
             </li>
             <li>
-              <a class="dropdown-item" href="/ourteam">
-                Our Team
-              </a>
+              <a class="dropdown-item" href="/ourteam">Our Team</a>
             </li>
           </ul>
+        </li>
+
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Services we offer
           </a>
           <ul class="dropdown-menu">
             <li>
-              <a class="dropdown-item" href="/addAnimal">
-                Add Animal
-              </a>
+              <a class="dropdown-item" href="/addAnimal">Add Animal</a>
             </li>
             <li>
-              <a class="dropdown-item" href="/animal">
-                List of Animals
-              </a>
+              <a class="dropdown-item" href="/animal">List of Animals</a>
             </li>
             <li>
-              <a class="dropdown-item" href="/Filter">
-                Filter by pets or illnesses
-              </a>
+              <a class="dropdown-item" href="/filter">Filter by pets or illnesses</a>
             </li>
           </ul>
         </li>
+
+        <!-- Login and Register dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Get Started
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="/login">Login</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/register">Register</a>
+            </li>
+          </ul>
+        </li>
+
         <li class="nav-item">
           <a class="nav-link" href="/contact">Contact</a>
         </li>
