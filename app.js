@@ -237,7 +237,7 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
-            res.redirect('/viewAnimal');
+            res.redirect('/animal');
         }
     });
 >>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
