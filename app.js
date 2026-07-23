@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const session = require('express-session');
 const flash = require('connect-flash');
 const multer = require('multer');
+const path = require('path');
 
 const app = express();
 
@@ -146,7 +147,7 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
             console.error('Registration error:', err);
             // Handle common cases like duplicate email gracefully
@@ -183,7 +184,7 @@ app.post('/login', (req, res) => {
         return res.redirect('/login');
     }
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    db.query(sql, [email, password], (err, results) => {
+    connection.query(sql, [email, password], (err, results) => {
         if (err) {
             throw err;
         }
@@ -221,7 +222,7 @@ app.get('/addAnimal', checkAuthenticated, (req, res) => {
 
 app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
     // Extract animal data from the request body
-    const { animalName, species, injuryLocation, comments } = req.body;
+    const { animalName, species, injury, comments } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -229,9 +230,9 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO animal (animalName, species, injury, comments, image) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
+    connection.query(sql , [animalName, species, injury, comments, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
