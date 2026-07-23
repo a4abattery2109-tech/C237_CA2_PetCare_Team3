@@ -3,10 +3,7 @@ const mysql = require('mysql2');
 const session = require('express-session');
 const flash = require('connect-flash');
 const multer = require('multer');
-<<<<<<< HEAD
-=======
 
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 const app = express();
 
 // Set up multer for file uploads
@@ -21,21 +18,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-<<<<<<< HEAD
 // // Localhost MySQL connection
 // const connection = mysql.createConnection({
 //     host: 'localhost',
 //     user: 'root',
 //     password: 'RP738964$',
 //     database: 'c237_supermarketdb'
-=======
 // Local connection
 //const db = mysql.createConnection({
     //host: 'localhost',
     //user: 'root',
     //password: 'RP738964$',
     //database: 'C237_usersdb'
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
@@ -61,13 +55,11 @@ connection.connect((err) => {
 app.set('view engine', 'ejs');
 //  enable static files
 app.use(express.static('public'));
-<<<<<<< HEAD
 // enable form processing
 app.use(express.urlencoded({
     extended: false
 }));
 
-=======
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
 
@@ -104,7 +96,6 @@ const checkAdmin = (req, res, next) => {
         res.redirect('/dashboard');
     }
 };
->>>>>>> 90a5b668bea6c69e59932efb2a801600ad14b675
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -194,7 +185,6 @@ app.post('/login', (req, res) => {
         }
     });
 });
-
 //******** TODO: Insert code for dashboard route to render dashboard page for users. ********//
 app.get('/dashboard', checkAuthenticated, (req, res) => {
     res.render('dashboard', { user: req.session.user });
@@ -212,10 +202,10 @@ app.get('/logout', (req, res) => {
 
 // //******** TODO: Insert code for adding an animal ********//
 app.get('/addAnimal', checkAuthenticated, (req, res) => {
-    res.render('addAnimal', { user: req.session.user });
+    res.render('addAnimal', {user: req.session.user } ); 
 });
 
-app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) => {
+app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
     // Extract animal data from the request body
     const { animalName, species, injuryLocation, comments } = req.body;
     let image;
@@ -227,7 +217,7 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) =>
 
     const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql, [animalName, species, injuryLocation, comments, image], (error, results) => {
+    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
@@ -236,10 +226,11 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) =>
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
-            res.redirect('/animal');
+            res.redirect('/viewAnimal');
         }
     });
 });
+
 
 app.get('/filter', (req, res) => {
     const { rating, keyword } = req.query;
