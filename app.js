@@ -224,8 +224,7 @@ app.post('/addAnimal', upload.single('image'), (req, res) => {
 
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
-    res.render('contact');
-    
+    res.render('contact'); 
 });
 
 app.post('/contact', (req, res) => {
