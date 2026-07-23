@@ -10,7 +10,14 @@
 
 <body>
 
-    <%- include('partials/header') %>
+        <%- include('partials/header') %>
+
+        <%
+            // Ensure template variables are defined to avoid ReferenceError when not passed
+            errors = typeof errors !== 'undefined' && errors ? errors : [];
+            messages = typeof messages !== 'undefined' && messages ? messages : [];
+            formData = typeof formData !== 'undefined' && formData ? formData : {};
+        %>
 
         <div class="container">
             <h1 class="mt-5">Register</h1>
