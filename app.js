@@ -312,7 +312,11 @@ app.post('/addAppointment', checkAuthenticated, (req, res) => {
         } else {
             // Send a success response
             req.flash('success', 'Appointment added successfully!');
-            res.redirect('/appointment');
+            if (req.session.user && req.session.user.role === 'admin') {
+                res.redirect('/appointmentAdmin');
+            } else {
+                res.redirect('/appointment');
+            }
         }
     });
 });
