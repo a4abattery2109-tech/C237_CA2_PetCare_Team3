@@ -90,12 +90,13 @@ const checkAuthenticated = (req, res, next) => {
 };
 //******** TODO: Create a Middleware to check if user is admin. ********//
 const checkAdmin = (req, res, next) => {
-    if (req.session.user.role === 'admin') {
+
+    if (req.session.user && req.session.user.role === 'admin') {
         return next();
-    } else {
-        req.flash('error', 'Access denied');
-        res.redirect('/dashboard');
     }
+
+    req.flash('error', 'Access denied. Admin only.');
+    return res.redirect('/dashboard');
 };
 // Routes
 app.get('/', (req, res) => {
@@ -217,7 +218,7 @@ app.get('/logout', (req, res) => {
 
 // //******** TODO: Insert code for adding an animal ********//
 app.get('/addAnimal', checkAuthenticated, (req, res) => {
-    res.render('addAnimal', {user: req.session.user } ); 
+        res.render('addAnimal', {user: req.session.user } ); 
 });
 
 app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
@@ -245,6 +246,158 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         }
     });
 });
+
+// Display update animal page - admin only
+app.get(
+    '/updateAnimal/:id',
+    checkAuthenticated,
+    checkAdmin,
+    (req, res) => {
+
+        const animalId = req.params.id;
+
+        const sql = `
+            SELECT *
+            FROM animal
+            WHERE animalId = ?
+        `;
+
+        connection.query(sql, [animalId], (error, results) => {
+
+            if (error) {
+                console.error('Error retrieving animal:', error);
+
+                req.flash(
+                    'error',
+                    'Unable to retrieve animal details'
+                );
+
+                return res.redirect('/viewAnimal');
+            }
+
+            if (results.length === 0) {
+
+                req.flash('error', 'Animal not found');
+
+                return res.redirect('/viewAnimal');
+            }
+
+            res.render('updateAnimal', {
+                updateAnimal: results[0],
+                user: req.session.user,
+                errors: req.flash('error')
+            });
+
+        });
+
+    }
+);
+
+// Process update animal form - admin only
+app.post(
+    '/updateAnimal/:id',
+    checkAuthenticated,
+    checkAdmin,
+    upload.single('image'),
+    (req, res) => {
+
+        const animalId = req.params.id;
+
+        const {
+            animalName,
+            species,
+            injury,
+            comments,
+            currentImage
+        } = req.body;
+
+        if (
+            !animalName ||
+            !species ||
+            !injury ||
+            !comments
+        ) {
+
+            req.flash(
+                'error',
+                'All fields are required.'
+            );
+
+            return res.redirect(
+                `/updateAnimal/${animalId}`
+            );
+        }
+
+        let image;
+
+        if (req.file) {
+            image = req.file.filename;
+        } else {
+            image = currentImage;
+        }
+
+        const sql = `
+            UPDATE animal
+            SET animalName = ?,
+                species = ?,
+                injury = ?,
+                comments = ?,
+                image = ?
+            WHERE animalId = ?
+        `;
+
+        connection.query(
+            sql,
+            [
+                animalName,
+                species,
+                injury,
+                comments,
+                image,
+                animalId
+            ],
+            (error, results) => {
+
+                if (error) {
+
+                    console.error(
+                        'Error updating animal:',
+                        error
+                    );
+
+                    req.flash(
+                        'error',
+                        'Unable to update animal'
+                    );
+
+                    return res.redirect(
+                        `/updateAnimal/${animalId}`
+                    );
+                }
+
+                if (results.affectedRows === 0) {
+
+                    req.flash(
+                        'error',
+                        'Animal not found'
+                    );
+
+                    return res.redirect('/viewAnimal');
+                }
+
+                req.flash(
+                    'success',
+                    'Animal updated successfully!'
+                );
+
+                res.redirect('/viewAnimal');
+
+            }
+        );
+
+    }
+);
+
 app.get('/addAppointment', checkAuthenticated, (req, res) => {
     res.render('addAppointment', {user: req.session.user } ); 
 });

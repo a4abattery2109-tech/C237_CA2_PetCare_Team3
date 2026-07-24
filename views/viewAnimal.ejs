@@ -1,0 +1,21 @@
+app.get('/viewAnimal', checkAuthenticated, (req, res) => {
+
+    const sql = 'SELECT * FROM animal';
+
+    connection.query(sql, (error, results) => {
+
+        if (error) {
+            console.error('Error retrieving animals:', error);
+            return res.status(500).send('Database error');
+        }
+
+        res.render('viewAnimal', {
+            animals: results,
+            user: req.session.user,
+            messages: req.flash('success'),
+            errors: req.flash('error')
+        });
+
+    });
+
+});
