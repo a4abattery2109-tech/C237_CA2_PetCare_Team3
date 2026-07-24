@@ -39,7 +39,7 @@
                                     <%= appointment[i].animalId %>
                                 </a></td>
                             <td>
-                                <%= appointment[i].appointmentdate %>
+                                <%= appointment[i].appointmentdate ? String(appointment[i].appointmentdate).slice(0, 10) : '' %>
                             </td>
                             <td>
                                 <%= appointment[i].reason %>

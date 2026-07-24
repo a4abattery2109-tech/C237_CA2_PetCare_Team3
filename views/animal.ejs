@@ -47,8 +47,10 @@
                             <td>
                                 <%= animal[i].history %>
                             </td>
+                            <% if (user.role === 'admin') { %>
                             <!-- Edit Link -->
                             <td><a href="/updateAnimal/<%= animal[i].animalId %>">Edit</a></td>
+                            <% } %>
                         </tr>
                         <% } %>
                 </tbody>

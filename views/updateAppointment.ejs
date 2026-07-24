@@ -33,7 +33,7 @@
 
                             <div class="mb-3">
                                 <label for="appointmentdate" class="form-label">Appointment Date</label>
-                                <input type="date" class="form-control" id="appointmentdate" name="appointmentdate" value="<%= appointment.appointmentdate %>" required>
+                                <input type="date" class="form-control" id="appointmentdate" name="appointmentdate" value="<%= appointment.appointmentdate ? String(appointment.appointmentdate).slice(0, 10) : '' %>" required>
                             </div>
 
                             <div class="mb-3">

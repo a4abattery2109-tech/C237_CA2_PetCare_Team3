@@ -71,13 +71,9 @@ const checkAuthenticated = (req, res, next) => {
 const checkAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
-    } else {
-        req.flash('error', 'Access denied');
-        res.redirect('/animal');
     }
-
     req.flash('error', 'Access denied. Admin only.');
-    return res.redirect('/dashboard');
+    return res.redirect('/animal');
 };
 
 // Routes
@@ -96,7 +92,10 @@ app.get('/ourteam', (req, res) => {
 app.get('/animal', checkAuthenticated, (req, res) => {
     const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal`;
     connection.query(sql, (error, results) => {
-        if (error) throw error;
+        if (error) {
+            console.error('Error loading animals:', error);
+            return res.status(500).send('Error loading animals');
+        }
         res.render('animal', { animal: results, user: req.session.user });
     });
 });
@@ -104,7 +103,10 @@ app.get('/animal', checkAuthenticated, (req, res) => {
 app.get('/animalAdmin', checkAuthenticated, checkAdmin, (req, res) => {
     const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal`;
     connection.query(sql, (error, results) => {
-        if (error) throw error;
+        if (error) {
+            console.error('Error loading admin animals:', error);
+            return res.status(500).send('Error loading animals');
+        }
         res.render('animalAdmin', { animal: results, user: req.session.user });
     });
 });
@@ -142,7 +144,9 @@ app.post('/register', validateRegistration, (req, res) => {
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
     connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
-            throw err;
+            console.error('Error registering user:', err);
+            req.flash('error', 'Registration failed. Please try again.');
+            return res.redirect('/register');
         }
         console.log(result);
         req.flash('success', 'Registration successful! Please log in.');
@@ -171,7 +175,9 @@ app.post('/login', (req, res) => {
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
     connection.query(sql, [email, password], (err, results) => {
         if (err) {
-            throw err;
+            console.error('Error during login:', err);
+            req.flash('error', 'Login failed. Please try again.');
+            return res.redirect('/login');
         }
         if (results.length > 0) {
             // Successful login
@@ -204,7 +210,10 @@ app.get('/animal/:id', checkAuthenticated, (req, res) => {
     // Fetch data from MySQL based on the animal ID
     const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal WHERE animalId = ?`;
     connection.query(sql, [animalId], (error, results) => {
-        if (error) throw error;
+        if (error) {
+            console.error('Error loading animal details:', error);
+            return res.status(500).send('Error loading animal details');
+        }
 
         // Check if any animal with the given ID was found
         if (results.length > 0) {
@@ -258,6 +267,21 @@ app.get('/appointment', checkAuthenticated, (req, res) => {
     });
 });
 
+app.get('/appointment/:id', checkAuthenticated, (req, res) => {
+    const appointmentId = req.params.id;
+    const sql = 'SELECT * FROM appointment WHERE appointmentId = ?';
+    connection.query(sql, [appointmentId], (error, results) => {
+        if (error) {
+            console.error('Error loading appointment details:', error);
+            return res.status(500).send('Error loading appointment details');
+        }
+        if (results.length > 0) {
+            return res.render('appointment', { appointment: [results[0]], user: req.session.user });
+        }
+        return res.status(404).send('Appointment not found');
+    });
+});
+
 app.get('/appointmentAdmin', checkAuthenticated, checkAdmin, (req, res) => {
     const sql = 'SELECT * FROM appointment';
     connection.query(sql, (error, results) => {
@@ -291,19 +315,51 @@ app.post('/addAppointment', checkAuthenticated, (req, res) => {
             res.redirect('/appointment');
         }
     });
+});
 
-    app.get('/deleteAppointment', checkAuthenticated, checkAdmin, (req, res) => {
-        const appointmentId = req.query.id;
+app.get('/deleteAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
 
-        connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error, results) => {
-            if (error) {
-                console.error('Error deleting appointment:', error);
-                return res.status(500).send('Error deleting appointment');
-            }
-            res.redirect('/appointmentAdmin');
-        });
+    connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error, results) => {
+        if (error) {
+            console.error('Error deleting appointment:', error);
+            return res.status(500).send('Error deleting appointment');
+        }
+        res.redirect('/appointmentAdmin');
     });
+});
 
+app.get('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+    const sql = 'SELECT * FROM appointment WHERE appointmentId = ?';
+
+    connection.query(sql, [appointmentId], (error, results) => {
+        if (error) {
+            console.error('Error loading appointment for update:', error);
+            return res.status(500).send('Error loading appointment');
+        }
+
+        if (results.length > 0) {
+            res.render('updateAppointment', { appointment: results[0], user: req.session.user });
+        } else {
+            res.status(404).send('Appointment not found');
+        }
+    });
+});
+
+app.post('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+    const { userid, animalId, appointmentdate, reason, comments } = req.body;
+    const sql = 'UPDATE appointment SET userid = ?, animalId = ?, appointmentdate = ?, reason = ?, comments = ? WHERE appointmentId = ?';
+
+    connection.query(sql, [userid, animalId, appointmentdate, reason, comments, appointmentId], (error, results) => {
+        if (error) {
+            console.error('Error updating appointment:', error);
+            return res.status(500).send('Error updating appointment');
+        }
+
+        res.redirect('/appointmentAdmin');
+    });
 });
 
 //Define a route to render the contact us page
@@ -345,7 +401,10 @@ app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
 
     // Fetch data from MySQL based on the animal ID
     connection.query(sql, [animalId], (error, results) => {
-        if (error) throw error;
+        if (error) {
+            console.error('Error loading animal for update:', error);
+            return res.status(500).send('Error loading animal');
+        }
 
         // Check if any animal with the given ID was found
         if (results.length > 0) {
