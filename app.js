@@ -248,7 +248,7 @@ app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (
 
 // Define a route to render the appointments page
 app.get('/addAppointment', checkAuthenticated, (req, res) => {
-    res.render('addAppointments', { user: req.session.user });
+    res.render('addAppointment', { user: req.session.user });
 });
 
 app.post('/addAppointment', checkAuthenticated, (req, res) => {
