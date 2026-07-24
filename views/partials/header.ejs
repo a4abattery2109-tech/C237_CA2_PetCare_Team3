@@ -35,6 +35,7 @@
           </a>
 
           <% const animalLink = (typeof user !== 'undefined' && user && user.role === 'admin') ? '/animalAdmin' : '/animal'; %>
+          <% const appointmentLink = (typeof user !== 'undefined' && user && user.role === 'admin') ? '/appointmentAdmin' : '/appointment'; %>
 
           <ul class="dropdown-menu">
             <li>
@@ -42,6 +43,9 @@
             </li>
             <li>
               <a class="dropdown-item" href="<%= animalLink %>">List of Animals</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="<%= appointmentLink %>">List of Appointments</a>
             </li>
             <li>
               <a class="dropdown-item" href="/addAppointment">Add Appointment</a>

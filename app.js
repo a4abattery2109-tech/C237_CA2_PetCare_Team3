@@ -278,7 +278,31 @@ app.get('/appointment', checkAuthenticated, (req, res) => {
     const sql = 'SELECT * FROM appointment';
     connection.query(sql, (error, results) => {
         if (error) throw error;
-        res.render('appointment', { appointment: results, user: req.session.user });
+        res.render('appointment', {
+            appointment: results,
+            user: req.session.user,
+            messages: req.flash('success')
+        });
+    });
+});
+
+// Define a route to view a single appointment
+app.get('/appointment/:id', checkAuthenticated, (req, res) => {
+    const appointmentId = req.params.id;
+    const sql = 'SELECT * FROM appointment WHERE appointmentId = ?';
+
+    connection.query(sql, [appointmentId], (error, results) => {
+        if (error) throw error;
+
+        if (results.length > 0) {
+            res.render('appointment', {
+                appointment: results,
+                user: req.session.user,
+                messages: req.flash('success')
+            });
+        } else {
+            res.status(404).send('Appointment not found');
+        }
     });
 });
 
@@ -287,7 +311,61 @@ app.get('/appointmentAdmin', checkAuthenticated, checkAdmin, (req, res) => {
     const sql = 'SELECT * FROM appointment';
     connection.query(sql, (error, results) => {
         if (error) throw error;
-        res.render('appointmentAdmin', { appointment: results, user: req.session.user });
+        res.render('appointmentAdmin', {
+            appointment: results,
+            user: req.session.user,
+            messages: req.flash('success')
+        });
+    });
+});
+
+// Define a route to render the update appointment page
+app.get('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+    const sql = 'SELECT * FROM appointment WHERE appointmentId = ?';
+
+    connection.query(sql, [appointmentId], (error, results) => {
+        if (error) throw error;
+
+        if (results.length > 0) {
+            res.render('updateAppointment', {
+                appointment: results[0],
+                user: req.session.user
+            });
+        } else {
+            res.status(404).send('Appointment not found');
+        }
+    });
+});
+
+app.post('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+    const { userid, animalId, reason, appointmentdate, comments } = req.body;
+    const sql = 'UPDATE appointment SET userid = ?, animalId = ?, reason = ?, appointmentdate = ?, comments = ? WHERE appointmentId = ?';
+
+    connection.query(sql, [userid, animalId, reason, appointmentdate, comments, appointmentId], (error) => {
+        if (error) {
+            console.error('Error updating appointment:', error);
+            res.status(500).send('Error updating appointment');
+        } else {
+            req.flash('success', 'Appointment updated successfully!');
+            res.redirect('/appointmentAdmin');
+        }
+    });
+});
+
+// Define a route to delete an appointment
+app.get('/deleteAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+
+    connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error) => {
+        if (error) {
+            console.error('Error deleting appointment:', error);
+            res.status(500).send('Error deleting appointment');
+        } else {
+            req.flash('success', 'Appointment deleted successfully!');
+            res.redirect('/appointmentAdmin');
+        }
     });
 });
 //Define a route to render the contact us page
