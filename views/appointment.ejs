@@ -32,13 +32,13 @@
                     <% for(let i=0; i < appointment.length; i++) { %>
                         <tr>
                             <td><a href="/appointment/<%= appointment[i].appointmentId %>">
-                                    <%= appointment[i].userId %>
+                                    <%= appointment[i].userid %>
                                 </a></td>
                             <td>
                                 <%= appointment[i].animalId %>
                             </td>
                             <td>
-                                <%= appointment[i].appointmentDate %>
+                                <%= appointment[i].appointmentdate %>
                             </td>
                             <td>
                                 <%= appointment[i].reason %>

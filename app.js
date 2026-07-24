@@ -272,6 +272,24 @@ app.post('/addAppointment', checkAuthenticated, (req, res) => {
         }
     });
 });
+
+// Define a route to view the appointment list (non-admin)
+app.get('/appointment', checkAuthenticated, (req, res) => {
+    const sql = 'SELECT * FROM appointment';
+    connection.query(sql, (error, results) => {
+        if (error) throw error;
+        res.render('appointment', { appointment: results, user: req.session.user });
+    });
+});
+
+// Define a route to view the appointment list (admin)
+app.get('/appointmentAdmin', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = 'SELECT * FROM appointment';
+    connection.query(sql, (error, results) => {
+        if (error) throw error;
+        res.render('appointmentAdmin', { appointment: results, user: req.session.user });
+    });
+});
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
     res.render('contact', { user: req.session.user });
