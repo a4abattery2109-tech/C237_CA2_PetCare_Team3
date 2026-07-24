@@ -92,14 +92,16 @@ app.get('/ourteam', (req, res) => {
 });
 
 app.get('/animal', checkAuthenticated, (req, res) => {
-    connection.query('SELECT * FROM animal', (error, results) => {
+    const sql = 'SELECT animalId, animalName, species, `condition`, image, history FROM animal';
+    connection.query(sql, (error, results) => {
         if (error) throw error;
         res.render('animal', { animal: results, user: req.session.user });
     });
 });
 
 app.get('/animalAdmin', checkAuthenticated, checkAdmin, (req, res) => {
-    connection.query('SELECT * FROM animal', (error, results) => {
+    const sql = 'SELECT animalId, animalName, species, `condition`, image, history FROM animal';
+    connection.query(sql, (error, results) => {
         if (error) throw error;
         res.render('animalAdmin', { animal: results, user: req.session.user });
     });
@@ -198,7 +200,8 @@ app.get('/animal/:id', checkAuthenticated, (req, res) => {
     const animalId = req.params.id;
 
     // Fetch data from MySQL based on the animal ID
-    connection.query('SELECT * FROM animal WHERE animalId = ?', [animalId], (error, results) => {
+    const sql = 'SELECT animalId, animalName, species, `condition`, image, history FROM animal WHERE animalId = ?';
+    connection.query(sql, [animalId], (error, results) => {
         if (error) throw error;
 
         // Check if any animal with the given ID was found
@@ -227,7 +230,7 @@ app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, condition, image, history) VALUES (?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO animal (animalName, species, `condition`, image, history) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
     connection.query(sql, [animalName, species, condition, image, history], (error, results) => {
         if (error) {
@@ -270,9 +273,9 @@ app.get('/filter', (req, res) => {
     let params = [];
 
     if (keyword) {
-        sql += ' WHERE animalName LIKE ? OR comments LIKE ?';
+        sql += ' WHERE animalName LIKE ? OR `condition` LIKE ? OR history LIKE ?';
         const searchKeyword = `%${keyword}%`;
-        params.push(searchKeyword, searchKeyword);
+        params.push(searchKeyword, searchKeyword, searchKeyword);
     }
 
     connection.query(sql, params, (error, results) => {
@@ -288,7 +291,7 @@ app.get('/filter', (req, res) => {
 // Define a route to render the update animal page
 app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const animalId = req.params.id;
-    const sql = 'SELECT * FROM animal WHERE animalId = ?';
+    const sql = 'SELECT animalId, animalName, species, `condition`, image, history FROM animal WHERE animalId = ?';
 
     // Fetch data from MySQL based on the animal ID
     connection.query(sql, [animalId], (error, results) => {
@@ -314,9 +317,9 @@ app.post('/updateAnimal/:id', checkAuthenticated, checkAdmin, upload.single('ima
         image = req.file.filename; // set image to be new image filename
     }
 
-    const sql = 'UPDATE animal SET animalName = ?, species = ?, `condition` = ?, image = ?, history = ? WHERE animalId = ?';
-    // Update the animal in the database
-    connection.query(sql, [animalName, species, condition, image, history, animalId], (error, results) => {
+    const sql = 'UPDATE animal SET animalName = ? , species = ?, `condition` = ?, history = ?, image = ? WHERE animalId = ?';
+    // Insert the new animal into the database
+    connection.query(sql, [animalName, species, condition, history, image, animalId], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error updating animal:", error);
