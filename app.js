@@ -217,11 +217,11 @@ app.get('/animal/:id', checkAuthenticated, (req, res) => {
 });
 
 // //******** TODO: Insert code for adding an animal ********//
-app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
     res.render('addAnimal', { user: req.session.user });
 });
 
-app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
+app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
     const { animalName, species, condition, history } = req.body;
     let image;
