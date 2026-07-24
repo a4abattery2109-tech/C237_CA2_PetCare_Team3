@@ -52,7 +52,7 @@
           </ul>
         </li>
 
-        <% if (user) { %>
+        <% if (typeof user !== 'undefined' && user) { %>
 
         <li class="nav-item">
           <a class="nav-link" href="/logout">Logout</a>
