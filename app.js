@@ -2,21 +2,11 @@ const express = require('express');
 const mysql = require('mysql2');
 const session = require('express-session');
 const flash = require('connect-flash');
-const multer = require('multer');
+
 
 const app = express();
 
 // Set up multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/images'); // Directory to save uploaded files
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({ storage: storage });
 
 // // Localhost MySQL connection
 // const connection = mysql.createConnection({
@@ -257,26 +247,24 @@ app.post('/contact', (req, res) => {
 
 // define a route to render filtering
 app.get('/filter', (req, res) => {
-    const { rating, keyword } = req.query;
-    let filteredCafes = cafes;
-    if (rating && rating !== '') {
-        filteredCafes = filteredCafes.filter(cafe => cafe.rating >= Number(rating));
-    }
-    if (keyword && keyword.trim() !== "") {
-        const lowerKeyword = keyword.trim().toLowerCase();
-        filteredCafes = filteredCafes.filter(cafe => {
-            const restaurantText = cafe.Restaurant
-                ? cafe.Restaurant.toLowerCase()
-                : "";
-            const commentsText = cafe.comments
-                ? cafe.comments.toLowerCase()
-                : "";
-            return restaurantText.includes(lowerKeyword) ||
-                commentsText.includes(lowerKeyword);
+    const { keyword } = req.query.keyword;
+    let sql = 'SELECT * FROM animal';
+    let params = [];
 
-        });
+    if (keyword) {
+        sql += ' WHERE animalName LIKE ? OR comments LIKE ?';
+        const searchKeyword = `%${keyword}%`;
+        params.push(searchKeyword, searchKeyword);
     }
-    res.render('filter', { cafes: filteredCafes, rating, keyword });
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error("Error filtering animals:", error);
+            res.status(500).send("Error occurred while filtering animals");
+        } else {
+            res.render('filter', { animals: results, keyword: keyword, user: req.session.user });
+        }
+    });
 });
 // Starting the server
 app.listen(3000, () => {

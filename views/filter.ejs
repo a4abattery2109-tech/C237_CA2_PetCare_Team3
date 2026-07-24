@@ -14,20 +14,9 @@
     <%- include('partials/header') %>
         <form action="/filter" method="GET">
             <div class="container py-5">
-                <h2>Filter by Rating and Keyword</h2>
+                <h2>Filter by Animal Name or Comments</h2>
                 <div class="mb-3">
-                    <label for="rating" class="form-label">Minimum Rating:</label>
-                    <select class="form-control" id="rating" name="rating">
-                        <option value="">Select Rating</option>
-                        <option value="1">1★</option>
-                        <option value="2">2★</option>
-                        <option value="3">3★</option>
-                        <option value="4">4★</option>
-                        <option value="5">5★</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="keyword" class="form-label">Keyword by Food name or Comments:</label>
+                    <label for="keyword" class="form-label">Keyword by Animal name or Comments:</label>
                     <input type="text" class="form-control" id="keyword" name="keyword"
                         placeholder="Enter food name or comment">
                 </div>
@@ -38,37 +27,33 @@
         <table class="table table-striped mt-4">
             <thead>
                 <tr>
-                    <th>Restaurant</th>
-                    <th>Food</th>
-                    <th>Rating</th>
-                    <th>Priority</th>
-                    <th>Comments</th>
+                    <th>Animal Name</th>
+                    <th>Species</th>
+                    <th>Description of Injury</th>
+                    <th>Comments from Veterinarian</th>
                 </tr>
             </thead>
             <tbody>
-                <% if (cafes.length=== 0) { %>
+                <% if (animals.length=== 0) { %>
                     <tr>
                         <td colspan="5" class="text-center">
-                            No such reviews match the filter criteria.
+                            No such animals match the filter criteria.
                         </td>
                     </tr>
                     <% } else { %>
-                        <% cafes.forEach(cafe=> { %>
+                        <% animals.forEach(animal=> { %>
                             <tr>
                                 <td>
-                                    <%= cafe.Restaurant %>
+                                    <%= animal.animalName %>
                                 </td>
                                 <td>
-                                    <%= cafe.Food %>
+                                    <%= animal.species %>
                                 </td>
                                 <td>
-                                    <%= cafe.rating %>★
+                                    <%= animal.injury %>
                                 </td>
                                 <td>
-                                    <%= cafe.priority %>
-                                </td>
-                                <td>
-                                    <%= cafe.comments %>
+                                    <%= animal.comment %>
                                 </td>
                             </tr>
                             <% }) %>
