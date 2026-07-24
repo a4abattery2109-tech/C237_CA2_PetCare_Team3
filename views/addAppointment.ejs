@@ -29,12 +29,30 @@
 
             <form action="/addAppointment" method="POST" enctype="multipart/form-data">
 
+              <div class="mb-3">
+                <label for="quantity" class="form-label">
+                  User ID
+                </label>
+
+                <input type="number" class="form-control" id="userid" name="userid" min="0" step="1"
+                  placeholder="Enter userid" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="quantity" class="form-label">
+                  Animal ID
+                </label>
+
+                <input type="number" class="form-control" id="animalId" name="animalId" min="0" step="1"
+                  placeholder="Enter animalId" required>
+              </div>
+
             <div class="mb-3">
                     <label for="date" class="form-label">
                     Appointment Date
                     </label>
     
-                    <input type="date" class="form-control" id="date" name="date" required>
+                    <input type="date" class="form-control" id="appointmentdate" name="appointmentdate" required>
                 </div>
 
             <div class="d-grid gap-2">
