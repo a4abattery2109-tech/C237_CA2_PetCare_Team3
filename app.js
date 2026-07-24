@@ -317,15 +317,15 @@ app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
 app.post('/updateAnimal/:id', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     const animalId = req.params.id;
     // Extract animal data from the request body
-    const { animalName, species, injury } = req.body;
+    const { animalName, species, injury, history } = req.body;
     let image = req.body.currentImage; //retrieve current image filename
     if (req.file) { //if new image is uploaded
         image = req.file.filename; // set image to be new image filename
     }
 
-    const sql = 'UPDATE animal SET animalName = ? , species = ?, injury = ?, image =? WHERE animalId = ?';
+    const sql = 'UPDATE animal SET animalName = ? , species = ?, injury = ?, history = ?, image =? WHERE animalId = ?';
     // Insert the new animal into the database
-    connection.query(sql, [animalName, species, injury, image, animalId], (error, results) => {
+    connection.query(sql, [animalName, species, injury, history, image, animalId], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error updating animal:", error);
