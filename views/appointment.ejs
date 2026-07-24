@@ -15,46 +15,42 @@
             <p>Welcome, <%= user.username %> (<%= user.role %>)</p>
             <br>
             <div class="text-center">
-                <h2>Animal List</h2>
+                <h2>Appointment Lists</h2>
             </div>
             <br>
             <table class="table table-hover small text-center">
                 <thead>
                     <tr>
-                        <th width="100">Animal Name</th>
-                        <th width="100">Species</th>
-                        <th width="50">Description of Condition</th>
-                        <th width="100">Condition Image</th>
-                        <th width="50">Medical history</th>
+                        <th width="100">User ID</th>
+                        <th width="100">Animal ID</th>
+                        <th width="50">Appointment Date</th>
+                        <th width="100">Reason for appointment</th>
+                        <th width="50">Comments</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% for(let i=0; i < animal.length; i++) { %>
+                    <% for(let i=0; i < appointment.length; i++) { %>
                         <tr>
-                            <td><a href="/animal/<%= animal[i].animalId %>">
-                                    <%= animal[i].animalName %>
+                            <td><a href="/appointment/<%= appointment[i].appointmentId %>">
+                                    <%= appointment[i].userId %>
                                 </a></td>
                             <td>
-                                <%= animal[i].species %>
+                                <%= appointment[i].animalId %>
                             </td>
                             <td>
-                                <%= animal[i].condition %>
-                            </td>
-                            <!-- Image -->
-                            <td>
-                                <img src="/images/<%= animal[i].image %>" alt="<%= animal[i].animalName %>" width="50%">
+                                <%= appointment[i].appointmentDate %>
                             </td>
                             <td>
-                                <%= animal[i].history %>
+                                <%= appointment[i].reason %>
                             </td>
-                            <!-- Edit Link -->
-                            <td><a href="/updateAnimal/<%= animal[i].animalId %>">Edit</a></td>
+                            <td>
+                                <%= appointment[i].comments %>
+                            </td>
                         </tr>
                         <% } %>
                 </tbody>
             </table>
         </div>
-        <a href="/addAnimal" class="btn btn-primary">Add Animal</a>
 </body>
 
 </html>

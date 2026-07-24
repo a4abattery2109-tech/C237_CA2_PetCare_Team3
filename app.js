@@ -1,37 +1,26 @@
 const express = require('express');
 const mysql = require('mysql2');
-const session = require('express-session');
-const flash = require('connect-flash');
+// use this for the team github thing
+const path = require("path");
 const multer = require('multer');
-const path = require('path');
+//******** TODO: Insert code to import 'express-session' *********//
+const session = require('express-session');
 
-const app = express();
+const flash = require('connect-flash');
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/images'); // Directory to save uploaded files
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, 'public', 'images'));
     },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
-
 const upload = multer({ storage: storage });
+const conditionColumn = mysql.escapeId('condition');
 
-// // Localhost MySQL connection
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'RP738964$',
-//     database: 'c237_supermarketdb'
-// Local connection
-//const db = mysql.createConnection({
-    //host: 'localhost',
-    //user: 'root',
-    //password: 'RP738964$',
-    //database: 'C237_usersdb'
-// });
+const app = express();
 
 // [C237-025] Database connection to Azure MySQL Database
 const connection = mysql.createConnection({
@@ -46,23 +35,15 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
     if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
+        throw err;
     }
-    console.log('Connected to MySQL database');
+    console.log('Connected to database');
 });
 
-// Set up view engine
-app.set('view engine', 'ejs');
-//  enable static files
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
-// enable form processing
-app.use(express.urlencoded({
-    extended: false
-}));
-
 // use this for the team github thing
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(path.join(__dirname, 'public', 'images')));
 
 // Setting up EJS
 app.set('view engine', 'ejs');
@@ -90,14 +71,17 @@ const checkAuthenticated = (req, res, next) => {
 };
 //******** TODO: Create a Middleware to check if user is admin. ********//
 const checkAdmin = (req, res, next) => {
-
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
+    } else {
+        req.flash('error', 'Access denied');
+        res.redirect('/animal');
     }
 
     req.flash('error', 'Access denied. Admin only.');
     return res.redirect('/dashboard');
 };
+
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -111,12 +95,24 @@ app.get('/ourteam', (req, res) => {
     res.render('ourteam', { user: req.session.user });
 });
 
-app.get('/register', (req, res) => {
-    res.render('register', {
-        errors: req.flash('error'),
-        messages: req.flash('success'),
-        formData: req.flash('formData')[0] || {}
+app.get('/animal', checkAuthenticated, (req, res) => {
+    const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal`;
+    connection.query(sql, (error, results) => {
+        if (error) throw error;
+        res.render('animal', { animal: results, user: req.session.user });
     });
+});
+
+app.get('/animalAdmin', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal`;
+    connection.query(sql, (error, results) => {
+        if (error) throw error;
+        res.render('animalAdmin', { animal: results, user: req.session.user });
+    });
+});
+
+app.get('/register', (req, res) => {
+    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
 
 
@@ -124,9 +120,7 @@ app.get('/register', (req, res) => {
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
-        req.flash('error', 'All fields are required.');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
+        return res.send('All fields are required.');
     }
     if (password.length < 6) {
         req.flash('error', 'Password should be at least 6 or more characters long');
@@ -150,17 +144,9 @@ app.post('/register', validateRegistration, (req, res) => {
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
     connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
-            console.error('Registration error:', err);
-            // Handle common cases like duplicate email gracefully
-            if (err.code === 'ER_DUP_ENTRY') {
-                req.flash('error', 'An account with that email already exists.');
-            } else {
-                req.flash('error', 'Registration failed. Please try again later.');
-            }
-            req.flash('formData', req.body);
-            return res.redirect('/register');
+            throw err;
         }
-        console.log('User registered:', result.insertId);
+        console.log(result);
         req.flash('success', 'Registration successful! Please log in.');
         res.redirect('/login');
     });
@@ -193,21 +179,17 @@ app.post('/login', (req, res) => {
             // Successful login
             req.session.user = results[0]; // store user in session
             req.flash('success', 'Login successful!');
-            res.redirect('/');
+            if (results[0].role === 'admin') {
+                res.redirect('/animalAdmin');
+            } else {
+                res.redirect('/animal');
+            }
         } else {
             // Invalid credentials
             req.flash('error', 'Invalid email or password.');
             res.redirect('/login');
         }
     });
-});
-//******** TODO: Insert code for dashboard route to render dashboard page for users. ********//
-app.get('/dashboard', checkAuthenticated, (req, res) => {
-    res.render('dashboard', { user: req.session.user });
-});
-//******** TODO: Insert code for admin route to render dashboard page for admin. ********//
-app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('admin', { user: req.session.user });
 });
 
 //******** TODO: Insert code for logout route ********//
@@ -216,14 +198,35 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// //******** TODO: Insert code for adding an animal ********//
-app.get('/addAnimal', checkAuthenticated, (req, res) => {
-        res.render('addAnimal', {user: req.session.user } ); 
+// Define a route to view animal details
+app.get('/animal/:id', checkAuthenticated, (req, res) => {
+    // Extract the animal ID from the request parameters
+    const animalId = req.params.id;
+
+    // Fetch data from MySQL based on the animal ID
+    const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal WHERE animalId = ?`;
+    connection.query(sql, [animalId], (error, results) => {
+        if (error) throw error;
+
+        // Check if any animal with the given ID was found
+        if (results.length > 0) {
+            // Render HTML page with the animal data
+            res.render('viewAnimal', { animal: results[0], user: req.session.user });
+        } else {
+            // If no animal with the given ID was found, render a 404 page or handle it accordingly
+            res.status(404).send('Animal not found');
+        }
+    });
 });
 
-app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+// //******** TODO: Insert code for adding an animal ********//
+app.get('/addAnimal', checkAuthenticated, (req, res) => {
+    res.render('addAnimal', { user: req.session.user });
+});
+
+app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
-    const { animalName, species, injury, comments } = req.body;
+    const { animalName, species, condition, history } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -231,209 +234,123 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injury, comments, image) VALUES (?, ?, ?, ?, ?)';
+    const sql = `INSERT INTO animal (animalName, species, ${conditionColumn}, image, history) VALUES (?, ?, ?, ?, ?)`;
     // Insert the new animal into the database
-    connection.query(sql , [animalName, species, injury, comments, image], (error, results) => {
+    connection.query(sql, [animalName, species, condition, image, history], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
-            req.flash('error', 'Error adding animal to database');
-            res.redirect('/addAnimal');
+            res.status(500).send('Error adding animal');
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
-            res.redirect('/viewAnimal');
+            res.redirect('/animal');
         }
     });
 });
 
-// Display update animal page - admin only
-app.get(
-    '/updateAnimal/:id',
-    checkAuthenticated,
-    checkAdmin,
-    (req, res) => {
-
-        const animalId = req.params.id;
-
-        const sql = `
-            SELECT *
-            FROM animal
-            WHERE animalId = ?
-        `;
-
-        connection.query(sql, [animalId], (error, results) => {
-
-            if (error) {
-                console.error('Error retrieving animal:', error);
-
-                req.flash(
-                    'error',
-                    'Unable to retrieve animal details'
-                );
-
-                return res.redirect('/viewAnimal');
-            }
-
-            if (results.length === 0) {
-
-                req.flash('error', 'Animal not found');
-
-                return res.redirect('/viewAnimal');
-            }
-
-            res.render('updateAnimal', {
-                updateAnimal: results[0],
-                user: req.session.user,
-                errors: req.flash('error')
-            });
-
-        });
-
-    }
-);
-
-// Process update animal form - admin only
-app.post(
-    '/updateAnimal/:id',
-    checkAuthenticated,
-    checkAdmin,
-    upload.single('image'),
-    (req, res) => {
-
-        const animalId = req.params.id;
-
-        const {
-            animalName,
-            species,
-            injury,
-            comments,
-            currentImage
-        } = req.body;
-
-        if (
-            !animalName ||
-            !species ||
-            !injury ||
-            !comments
-        ) {
-
-            req.flash(
-                'error',
-                'All fields are required.'
-            );
-
-            return res.redirect(
-                `/updateAnimal/${animalId}`
-            );
-        }
-
-        let image;
-
-        if (req.file) {
-            image = req.file.filename;
-        } else {
-            image = currentImage;
-        }
-
-        const sql = `
-            UPDATE animal
-            SET animalName = ?,
-                species = ?,
-                injury = ?,
-                comments = ?,
-                image = ?
-            WHERE animalId = ?
-        `;
-
-        connection.query(
-            sql,
-            [
-                animalName,
-                species,
-                injury,
-                comments,
-                image,
-                animalId
-            ],
-            (error, results) => {
-
-                if (error) {
-
-                    console.error(
-                        'Error updating animal:',
-                        error
-                    );
-
-                    req.flash(
-                        'error',
-                        'Unable to update animal'
-                    );
-
-                    return res.redirect(
-                        `/updateAnimal/${animalId}`
-                    );
-                }
-
-                if (results.affectedRows === 0) {
-
-                    req.flash(
-                        'error',
-                        'Animal not found'
-                    );
-
-                    return res.redirect('/viewAnimal');
-                }
-
-                req.flash(
-                    'success',
-                    'Animal updated successfully!'
-                );
-
-                res.redirect('/viewAnimal');
-
-            }
-        );
-
-    }
-);
-
+// Define a route to render the appointments page
 app.get('/addAppointment', checkAuthenticated, (req, res) => {
-    res.render('addAppointment', {user: req.session.user } ); 
+    res.render('addAppointment', { user: req.session.user });
 });
+
+app.post('/addAppointment', checkAuthenticated, (req, res) => {
+    // Placeholder submit route so the form posts cleanly until DB logic is added.
+    req.flash('success', 'Appointment form submitted.');
+    res.redirect('/addAppointment');
+});
+
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
-    res.render('contact'); 
+    res.render('contact', { user: req.session.user });
 });
 
 app.post('/contact', (req, res) => {
     const { name, email, contact, comments } = req.body;
-    res.render('confirm', { name, email, contact, comments});
+    res.render('confirm', { name, email, contact, comments });
 });
 
 // define a route to render filtering
 app.get('/filter', (req, res) => {
-    const { rating, keyword } = req.query;
-    let filteredCafes = cafes;
-    if (rating && rating !== '') {
-        filteredCafes = filteredCafes.filter(cafe => cafe.rating >= Number(rating));
-    }
-    if (keyword && keyword.trim() !== "") {
-        const lowerKeyword = keyword.trim().toLowerCase();
-        filteredCafes = filteredCafes.filter(cafe => {
-            const restaurantText = cafe.Restaurant
-                ? cafe.Restaurant.toLowerCase()
-                : "";
-            const commentsText = cafe.comments
-                ? cafe.comments.toLowerCase()
-                : "";
-            return restaurantText.includes(lowerKeyword) ||
-                commentsText.includes(lowerKeyword);
+    const keyword = req.query.keyword || '';
+    let sql = 'SELECT * FROM animal';
+    let params = [];
 
-        });
+    if (keyword) {
+        sql += ` WHERE animalName LIKE ? OR ${conditionColumn} LIKE ? OR history LIKE ?`;
+        const searchKeyword = `%${keyword}%`;
+        params.push(searchKeyword, searchKeyword, searchKeyword);
     }
-    res.render('filter', { cafes: filteredCafes, rating, keyword });
+
+    connection.query(sql, params, (error, results) => {
+        if (error) {
+            console.error("Error filtering animals:", error);
+            res.status(500).send("Error occurred while filtering animals");
+        } else {
+            res.render('filter', { animals: results, keyword: keyword, user: req.session.user });
+        }
+    });
 });
+
+// Define a route to render the update animal page
+app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const animalId = req.params.id;
+    const sql = `SELECT animalId, animalName, species, ${conditionColumn}, image, history FROM animal WHERE animalId = ?`;
+
+    // Fetch data from MySQL based on the animal ID
+    connection.query(sql, [animalId], (error, results) => {
+        if (error) throw error;
+
+        // Check if any animal with the given ID was found
+        if (results.length > 0) {
+            // Render HTML page with the animal data
+            res.render('updateAnimal', { animal: results[0], user: req.session.user });
+        } else {
+            // If no animal with the given ID was found, render a 404 page or handle it accordingly
+            res.status(404).send('Animal not found');
+        }
+    });
+});
+
+app.post('/updateAnimal/:id', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
+    const animalId = req.params.id;
+    // Extract animal data from the request body
+    const { animalName, species, condition, history } = req.body;
+    let image = req.body.currentImage; //retrieve current image filename
+    if (req.file) { //if new image is uploaded
+        image = req.file.filename; // set image to be new image filename
+    }
+
+    const sql = `UPDATE animal SET animalName = ? , species = ?, ${conditionColumn} = ?, history = ?, image = ? WHERE animalId = ?`;
+    // Insert the new animal into the database
+    connection.query(sql, [animalName, species, condition, history, image, animalId], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error updating animal:", error);
+            res.status(500).send('Error updating animal');
+        } else {
+            // Send a success response
+            res.redirect('/animalAdmin');
+        }
+    });
+});
+
+// Define a route to delete an Animal
+app.get('/deleteAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const animalId = req.params.id;
+
+    connection.query('DELETE FROM animal WHERE animalId = ?', [animalId], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error deleting animal:", error);
+            res.status(500).send('Error deleting animal');
+        } else {
+            // Send a success response
+            res.redirect('/animalAdmin');
+        }
+    });
+});
+
 // Starting the server
 app.listen(3000, () => {
     console.log('Server started on port http://localhost:3000');
