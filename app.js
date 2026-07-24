@@ -2,11 +2,13 @@ const express = require('express');
 const mysql = require('mysql2');
 // use this for the team github thing
 const path = require("path");
+const multer = require('multer');
 //******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
 
 const flash = require('connect-flash');
 
+const upload = multer({ dest: path.join(__dirname, 'public', 'images') });
 
 const app = express();
 
@@ -42,7 +44,7 @@ connection.connect((err) => {
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 // use this for the team github thing
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(path.join(__dirname, 'public', 'images')));
 
 // Setting up EJS
 app.set('view engine', 'ejs');
@@ -70,11 +72,11 @@ const checkAuthenticated = (req, res, next) => {
 };
 //******** TODO: Create a Middleware to check if user is admin. ********//
 const checkAdmin = (req, res, next) => {
-    if (req.session.user.role === 'admin') {
+    if (req.session.user && req.session.user.role === 'admin') {
         return next();
     } else {
         req.flash('error', 'Access denied');
-        res.redirect('/dashboard');
+        res.redirect('/animal');
     }
 };
 // Routes
@@ -88,6 +90,20 @@ app.get('/about', (req, res) => {
 
 app.get('/ourteam', (req, res) => {
     res.render('ourteam', { user: req.session.user });
+});
+
+app.get('/animal', checkAuthenticated, (req, res) => {
+    connection.query('SELECT * FROM animal', (error, results) => {
+        if (error) throw error;
+        res.render('animal', { animal: results, user: req.session.user });
+    });
+});
+
+app.get('/animalAdmin', checkAuthenticated, checkAdmin, (req, res) => {
+    connection.query('SELECT * FROM animal', (error, results) => {
+        if (error) throw error;
+        res.render('animalAdmin', { animal: results, user: req.session.user });
+    });
 });
 
 app.get('/register', (req, res) => {
@@ -158,21 +174,17 @@ app.post('/login', (req, res) => {
             // Successful login
             req.session.user = results[0]; // store user in session
             req.flash('success', 'Login successful!');
-            res.redirect('/dashboard');
+            if (results[0].role === 'admin') {
+                res.redirect('/animalAdmin');
+            } else {
+                res.redirect('/animal');
+            }
         } else {
             // Invalid credentials
             req.flash('error', 'Invalid email or password.');
             res.redirect('/login');
         }
     });
-});
-//******** TODO: Insert code for dashboard route to render dashboard page for users. ********//
-app.get('/dashboard', checkAuthenticated, (req, res) => {
-    res.render('dashboard', { user: req.session.user });
-});
-//******** TODO: Insert code for admin route to render dashboard page for admin. ********//
-app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('admin', { user: req.session.user });
 });
 
 //******** TODO: Insert code for logout route ********//
@@ -208,7 +220,7 @@ app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
 
 app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
-    const { animalName, species, injury } = req.body;
+    const { animalName, species, injury, history } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -216,9 +228,9 @@ app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injury, image) VALUES (?, ?, ?, ?)';
+    const sql = 'INSERT INTO animal (animalName, species, injury, image, history) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql, [animalName, species, injury, image], (error, results) => {
+    connection.query(sql, [animalName, species, injury, image, history], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
@@ -254,7 +266,7 @@ app.post('/contact', (req, res) => {
 
 // define a route to render filtering
 app.get('/filter', (req, res) => {
-    const { keyword } = req.query.keyword;
+    const keyword = req.query.keyword;
     let sql = 'SELECT * FROM animal';
     let params = [];
 
@@ -274,7 +286,7 @@ app.get('/filter', (req, res) => {
     });
 });
 
-// Define a route to render the inventory page
+// Define a route to render the update animal page
 app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const animalId = req.params.id;
     const sql = 'SELECT * FROM animal WHERE animalId = ?';
@@ -286,7 +298,7 @@ app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
         // Check if any animal with the given ID was found
         if (results.length > 0) {
             // Render HTML page with the animal data
-            res.render('updateAnimal', { animal: results[0] });
+            res.render('updateAnimal', { animal: results[0], user: req.session.user });
         } else {
             // If no animal with the given ID was found, render a 404 page or handle it accordingly
             res.status(404).send('Animal not found');
@@ -294,7 +306,7 @@ app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
     });
 });
 
-app.post('/updateAnimal/:id', upload.single('image'), (req, res) => {
+app.post('/updateAnimal/:id', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     const animalId = req.params.id;
     // Extract animal data from the request body
     const { animalName, species, injury } = req.body;
@@ -312,13 +324,13 @@ app.post('/updateAnimal/:id', upload.single('image'), (req, res) => {
             res.status(500).send('Error updating animal');
         } else {
             // Send a success response
-            res.redirect('/inventory');
+            res.redirect('/animalAdmin');
         }
     });
 });
 
 // Define a route to delete an Animal
-app.get('/deleteAnimal/:id', (req, res) => {
+app.get('/deleteAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const animalId = req.params.id;
 
     connection.query('DELETE FROM animal WHERE animalId = ?', [animalId], (error, results) => {
@@ -328,7 +340,7 @@ app.get('/deleteAnimal/:id', (req, res) => {
             res.status(500).send('Error deleting animal');
         } else {
             // Send a success response
-            res.redirect('/animal');
+            res.redirect('/animalAdmin');
         }
     });
 });

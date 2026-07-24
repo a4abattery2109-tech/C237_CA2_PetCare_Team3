@@ -22,7 +22,7 @@
                             <th>Animal Name</th>
                             <th>Species</th>
                             <th>Description of Injury</th>
-                            <th>Comments from Veterinarian</th>
+                            <th>History</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -36,16 +36,16 @@
                                 <% animals.forEach(animal=> { %>
                                     <tr>
                                         <td>
-                                            <%= animal.animalName %>
+                                            <%= animal[i].animalName %>
                                         </td>
                                         <td>
-                                            <%= animal.species %>
+                                            <%= animal[i].species %>
                                         </td>
                                         <td>
-                                            <%= animal.injury %>
+                                            <%= animal[i].injury %>
                                         </td>
                                         <td>
-                                            <%= animal.comment %>
+                                            <%= animal[i].history %>
                                         </td>
                                     </tr>
                                     <% }) %>

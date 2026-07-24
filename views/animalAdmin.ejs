@@ -24,7 +24,7 @@
                         <th width="100">Species</th>
                         <th width="100">Animal Image</th>
                         <th width="50">Description of Injury</th>
-                        <th width="50">Comments from Veterinarian</th>
+                        <th width="50">History</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,7 +36,7 @@
                             <td>
                                 <%= animal[i].species %>
                             </td>
-                            <td><img src="images/<%= animal[i].image %>" width="20%"></td>
+                            <td><img src="/images/<%= animal[i].image %>" width="20%"></td>
                             <td>
                                 <%= animal[i].injury %>
                             </td>

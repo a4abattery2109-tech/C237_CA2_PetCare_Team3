@@ -25,35 +25,25 @@
                         <th width="100">Species</th>
                         <th width="100">Animal Image</th>
                         <th width="50">Description of Injury</th>
-                        <th width="50">Comments from Veterinarian</th>
+                        <th width="50">History</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% for(let i=0; i < animal.length; i++) { %>
                         <tr>
-                            <!-- Animal Name -->
-                            <td>
-                                <%= animal[i].animalName %>
-                            </td>
                             <td><a href="/animal/<%= animal[i].animalId %>">
                                     <%= animal[i].animalName %>
                                 </a></td>
-                            <!-- Species -->
                             <td>
                                 <%= animal[i].species %>
                             </td>
-
-                            <!-- Injury Description -->
+                            <!-- Image -->
+                            <td>
+                                <img src="/images/<%= animal[i].image %>" alt="<%= animal[i].animalName %>" width="50%">
+                            </td>
                             <td>
                                 <%= animal[i].injury %>
                             </td>
-
-                            <!-- Image -->
-                            <td>
-                                <img src="images/<%= animal[i].image %>" alt="<%= animal[i].animalName %>" width="20%">
-                            </td>
-
-                            <!-- Vet Comment -->
                             <td>
                                 <%= animal[i].history %>
                             </td>
