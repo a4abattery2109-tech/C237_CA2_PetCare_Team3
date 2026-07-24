@@ -8,6 +8,7 @@ const session = require('express-session');
 
 const flash = require('connect-flash');
 
+// Set up multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, path.join(__dirname, 'public', 'images'));
@@ -20,16 +21,6 @@ const upload = multer({ storage: storage });
 
 const app = express();
 
-// Set up multer for file uploads
-
-// Local connection
-//const db = mysql.createConnection({
-//host: 'localhost',
-//user: 'root',
-//password: 'RP738964$',
-//database: 'C237_usersdb'
-// });
-
 // [C237-025] Database connection to Azure MySQL Database
 const connection = mysql.createConnection({
     host: 'c237-annie-mysql.mysql.database.azure.com',
@@ -40,7 +31,6 @@ const connection = mysql.createConnection({
         rejectUnauthorized: false
     }
 });
-
 
 connection.connect((err) => {
     if (err) {
@@ -87,6 +77,7 @@ const checkAdmin = (req, res, next) => {
         res.redirect('/animal');
     }
 };
+
 // Routes
 app.get('/', (req, res) => {
     res.render('index', { user: req.session.user, messages: req.flash('success') });
@@ -228,7 +219,7 @@ app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
 
 app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
-    const { animalName, species, injury, history } = req.body;
+    const { animalName, species, condition, history } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -236,9 +227,9 @@ app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injury, image, history) VALUES (?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO animal (animalName, species, condition, image, history) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql, [animalName, species, injury, image, history], (error, results) => {
+    connection.query(sql, [animalName, species, condition, image, history], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
@@ -317,15 +308,15 @@ app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
 app.post('/updateAnimal/:id', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     const animalId = req.params.id;
     // Extract animal data from the request body
-    const { animalName, species, injury } = req.body;
+    const { animalName, species, condition } = req.body;
     let image = req.body.currentImage; //retrieve current image filename
     if (req.file) { //if new image is uploaded
         image = req.file.filename; // set image to be new image filename
     }
 
-    const sql = 'UPDATE animal SET animalName = ? , species = ?, injury = ?, image =? WHERE animalId = ?';
+    const sql = 'UPDATE animal SET animalName = ? , species = ?, condition = ?, image =? WHERE animalId = ?';
     // Insert the new animal into the database
-    connection.query(sql, [animalName, species, injury, image, animalId], (error, results) => {
+    connection.query(sql, [animalName, species, condition, image, animalId], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error updating animal:", error);
