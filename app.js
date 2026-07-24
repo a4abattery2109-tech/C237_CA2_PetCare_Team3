@@ -1,6 +1,10 @@
 const express = require('express');
 const mysql = require('mysql2');
+// use this for the team github thing
+const path = require("path");
+//******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
+
 const flash = require('connect-flash');
 
 
@@ -8,18 +12,12 @@ const app = express();
 
 // Set up multer for file uploads
 
-// // Localhost MySQL connection
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'RP738964$',
-//     database: 'c237_supermarketdb'
 // Local connection
 //const db = mysql.createConnection({
-    //host: 'localhost',
-    //user: 'root',
-    //password: 'RP738964$',
-    //database: 'C237_usersdb'
+//host: 'localhost',
+//user: 'root',
+//password: 'RP738964$',
+//database: 'C237_usersdb'
 // });
 
 // [C237-025] Database connection to Azure MySQL Database
@@ -33,23 +31,16 @@ const connection = mysql.createConnection({
     }
 });
 
+
 connection.connect((err) => {
     if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
+        throw err;
     }
-    console.log('Connected to MySQL database');
+    console.log('Connected to database');
 });
 
-// Set up view engine
-app.set('view engine', 'ejs');
-//  enable static files
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
-// enable form processing
-app.use(express.urlencoded({
-    extended: false
-}));
-
 // use this for the team github thing
 app.use("/images", express.static(path.join(__dirname, "images")));
 
@@ -100,11 +91,7 @@ app.get('/ourteam', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-    res.render('register', {
-        errors: req.flash('error'),
-        messages: req.flash('success'),
-        formData: req.flash('formData')[0] || {}
-    });
+    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
 
 
@@ -112,9 +99,7 @@ app.get('/register', (req, res) => {
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
-        req.flash('error', 'All fields are required.');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
+        return res.send('All fields are required.');
     }
     if (password.length < 6) {
         req.flash('error', 'Password should be at least 6 or more characters long');
@@ -136,19 +121,11 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
-            console.error('Registration error:', err);
-            // Handle common cases like duplicate email gracefully
-            if (err.code === 'ER_DUP_ENTRY') {
-                req.flash('error', 'An account with that email already exists.');
-            } else {
-                req.flash('error', 'Registration failed. Please try again later.');
-            }
-            req.flash('formData', req.body);
-            return res.redirect('/register');
+            throw err;
         }
-        console.log('User registered:', result.insertId);
+        console.log(result);
         req.flash('success', 'Registration successful! Please log in.');
         res.redirect('/login');
     });
@@ -173,7 +150,7 @@ app.post('/login', (req, res) => {
         return res.redirect('/login');
     }
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    db.query(sql, [email, password], (err, results) => {
+    connection.query(sql, [email, password], (err, results) => {
         if (err) {
             throw err;
         }
@@ -205,13 +182,13 @@ app.get('/logout', (req, res) => {
 });
 
 // //******** TODO: Insert code for adding an animal ********//
-app.get('/addAnimal', checkAuthenticated, (req, res) => {
-    res.render('addAnimal', {user: req.session.user } ); 
+app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('addAnimal', { user: req.session.user });
 });
 
-app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) => {
+app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
-    const { animalName, species, injuryLocation, comments } = req.body;
+    const { animalName, species, injury } = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -219,25 +196,35 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'),  (req, res) =
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injuryLocation, comments, image) VALUES (?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO animal (animalName, species, injury, image) VALUES (?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql , [animalName, species, injuryLocation, comments, image], (error, results) => {
+    connection.query(sql, [animalName, species, injury, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
-            req.flash('error', 'Error adding animal to database');
-            res.redirect('/addAnimal');
+            res.status(500).send('Error adding animal');
         } else {
             // Send a success response
             req.flash('success', 'Animal added successfully!');
-            res.redirect('/viewAnimal');
+            res.redirect('/animal');
         }
     });
 });
 
+// Define a route to render the appointments page
+app.get('/addAppointment', checkAuthenticated, (req, res) => {
+    res.render('addAppointments', { user: req.session.user });
+});
+
+app.post('/addAppointment', checkAuthenticated, (req, res) => {
+    // Placeholder submit route so the form posts cleanly until DB logic is added.
+    req.flash('success', 'Appointment form submitted.');
+    res.redirect('/addAppointment');
+});
+
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
-    res.render('contact'); 
+    res.render('contact', { user: req.session.user });
 });
 
 app.post('/contact', (req, res) => {
@@ -266,6 +253,7 @@ app.get('/filter', (req, res) => {
         }
     });
 });
+
 // Starting the server
 app.listen(3000, () => {
     console.log('Server started on port http://localhost:3000');
