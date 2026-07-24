@@ -14,54 +14,46 @@
     <%- include('partials/header') %>
         <form action="/filter" method="GET">
             <div class="container py-5">
-                <h2>Filter by Animal Name or Comments</h2>
-                <div class="mb-3">
-                    <label for="keyword" class="form-label">Keyword by Animal name or Comments:</label>
-                    <input type="text" class="form-control" id="keyword" name="keyword"
-                        placeholder="Enter food name or comment">
-                </div>
-                <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="/confirm" class="btn btn-secondary">Reset</a>
-        </form>
+                <h2>Filter by Animal List</h2>
 
-        <table class="table table-striped mt-4">
-            <thead>
-                <tr>
-                    <th>Animal Name</th>
-                    <th>Species</th>
-                    <th>Description of Injury</th>
-                    <th>Comments from Veterinarian</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (animals.length=== 0) { %>
-                    <tr>
-                        <td colspan="5" class="text-center">
-                            No such animals match the filter criteria.
-                        </td>
-                    </tr>
-                    <% } else { %>
-                        <% animals.forEach(animal=> { %>
+                <table class="table table-striped mt-4">
+                    <thead>
+                        <tr>
+                            <th>Animal Name</th>
+                            <th>Species</th>
+                            <th>Description of Injury</th>
+                            <th>Comments from Veterinarian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (animals.length===0) { %>
                             <tr>
-                                <td>
-                                    <%= animal.animalName %>
-                                </td>
-                                <td>
-                                    <%= animal.species %>
-                                </td>
-                                <td>
-                                    <%= animal.injury %>
-                                </td>
-                                <td>
-                                    <%= animal.comment %>
+                                <td colspan="5" class="text-center">
+                                    No such animals match the filter criteria.
                                 </td>
                             </tr>
-                            <% }) %>
-                                <% } %>
+                            <% } else { %>
+                                <% animals.forEach(animal=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= animal.animalName %>
+                                        </td>
+                                        <td>
+                                            <%= animal.species %>
+                                        </td>
+                                        <td>
+                                            <%= animal.injury %>
+                                        </td>
+                                        <td>
+                                            <%= animal.comment %>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                        <% } %>
 
-            </tbody>
-        </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
 </body>
 
 </html>
