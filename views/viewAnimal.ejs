@@ -26,14 +26,16 @@
           <td>
             <%= animal[i].species %>
           </td>
-          <td><img src="images/<%= animal[i].image %>" width="20%"></td>
           <td>
             <%= animal[i].injury %>
           </td>
-          <td>$<%= animal[i].comment %>
+          </td>
+          <td><img src="images/<%= animal[i].image %>" width="20%"></td>
+          <td><%= animal[i].history %>
+          </td>
         </div>
         <% } else { %>
-          <p>No product found.</p>
+          <p>No animal found.</p>
           <% } %>
             <% if (user.role==="admin" ) { %>
               <a href="/animalAdmin">Back</a>
