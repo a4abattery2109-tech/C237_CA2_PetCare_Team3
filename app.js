@@ -181,6 +181,26 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
+// Define a route to view animal details
+app.get('/animal/:id', checkAuthenticated, (req, res) => {
+    // Extract the animal ID from the request parameters
+    const animalId = req.params.id;
+
+    // Fetch data from MySQL based on the animal ID
+    connection.query('SELECT * FROM animal WHERE animalId = ?', [animalId], (error, results) => {
+        if (error) throw error;
+
+        // Check if any animal with the given ID was found
+        if (results.length > 0) {
+            // Render HTML page with the animal data
+            res.render('viewAnimal', { animal: results[0], user: req.session.user });
+        } else {
+            // If no animal with the given ID was found, render a 404 page or handle it accordingly
+            res.status(404).send('Animal not found');
+        }
+    });
+});
+
 // //******** TODO: Insert code for adding an animal ********//
 app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
     res.render('addAnimal', { user: req.session.user });
@@ -250,6 +270,65 @@ app.get('/filter', (req, res) => {
             res.status(500).send("Error occurred while filtering animals");
         } else {
             res.render('filter', { animals: results, keyword: keyword, user: req.session.user });
+        }
+    });
+});
+
+// Define a route to render the inventory page
+app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const animalId = req.params.id;
+    const sql = 'SELECT * FROM animal WHERE animalId = ?';
+
+    // Fetch data from MySQL based on the animal ID
+    connection.query(sql, [animalId], (error, results) => {
+        if (error) throw error;
+
+        // Check if any animal with the given ID was found
+        if (results.length > 0) {
+            // Render HTML page with the animal data
+            res.render('updateAnimal', { animal: results[0] });
+        } else {
+            // If no animal with the given ID was found, render a 404 page or handle it accordingly
+            res.status(404).send('Animal not found');
+        }
+    });
+});
+
+app.post('/updateAnimal/:id', upload.single('image'), (req, res) => {
+    const animalId = req.params.id;
+    // Extract animal data from the request body
+    const { animalName, species, injury } = req.body;
+    let image = req.body.currentImage; //retrieve current image filename
+    if (req.file) { //if new image is uploaded
+        image = req.file.filename; // set image to be new image filename
+    }
+
+    const sql = 'UPDATE animal SET animalName = ? , species = ?, injury = ?, image =? WHERE animalId = ?';
+    // Insert the new animal into the database
+    connection.query(sql, [animalName, species, injury, image, animalId], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error updating animal:", error);
+            res.status(500).send('Error updating animal');
+        } else {
+            // Send a success response
+            res.redirect('/inventory');
+        }
+    });
+});
+
+// Define a route to delete an Animal
+app.get('/deleteAnimal/:id', (req, res) => {
+    const animalId = req.params.id;
+
+    connection.query('DELETE FROM animal WHERE animalId = ?', [animalId], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error deleting animal:", error);
+            res.status(500).send('Error deleting animal');
+        } else {
+            // Send a success response
+            res.redirect('/animal');
         }
     });
 });
