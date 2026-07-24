@@ -269,7 +269,7 @@ app.get('/contact', (req, res) => {
 
 app.post('/contact', (req, res) => {
     const { name, email, contact, comments } = req.body;
-    res.render('confirm', { name, email, contact, comments});
+    res.render('confirm', { name, email, contact, comments });
 });
 
 // define a route to render filtering
