@@ -23,9 +23,9 @@
                     <tr>
                         <th width="100">Animal Name</th>
                         <th width="100">Species</th>
-                        <th width="100">Animal Image</th>
                         <th width="50">Description of Condition</th>
-                        <th width="50">History</th>
+                        <th width="100">Condition Image</th>
+                        <th width="50">Medical history</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,12 +37,12 @@
                             <td>
                                 <%= animal[i].species %>
                             </td>
+                            <td>
+                                <%= animal[i].condition %>
+                            </td>
                             <!-- Image -->
                             <td>
                                 <img src="/images/<%= animal[i].image %>" alt="<%= animal[i].animalName %>" width="50%">
-                            </td>
-                            <td>
-                                <%= animal[i].condition %>
                             </td>
                             <td>
                                 <%= animal[i].history %>
