@@ -47,12 +47,14 @@
                             <td>
                                 <%= animal[i].history %>
                             </td>
+                            <!-- Edit Link -->
+                            <td><a href="/updateAnimal/<%= animal[i].animalId %>">Edit</a></td>
                         </tr>
                         <% } %>
-                        <a href="/addAnimal" class="btn btn-primary">Add Animal</a>
                 </tbody>
             </table>
         </div>
+        <a href="/addAnimal" class="btn btn-primary">Add Animal</a>
 </body>
 
 </html>
