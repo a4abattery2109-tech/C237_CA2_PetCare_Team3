@@ -255,11 +255,23 @@ app.get('/addAppointment', checkAuthenticated, (req, res) => {
 });
 
 app.post('/addAppointment', checkAuthenticated, (req, res) => {
-    // Placeholder submit route so the form posts cleanly until DB logic is added.
-    req.flash('success', 'Appointment form submitted.');
-    res.redirect('/addAppointment');
-});
+    // Extract appointment data from the request body
+    const { userid, animalId, reason, appointmentdate, comments } = req.body;
 
+    const sql = `INSERT INTO appointment (userid, animalId, reason, appointmentdate, comments) VALUES (?, ?, ?, ?, ?)`;
+    // Insert the new appointment into the database
+    connection.query(sql, [userid, animalId, reason, appointmentdate, comments], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error adding appointment:", error);
+            res.status(500).send('Error adding appointment');
+        } else {
+            // Send a success response
+            req.flash('success', 'Appointment added successfully!');
+            res.redirect('/appointment');
+        }
+    });
+});
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
     res.render('contact', { user: req.session.user });
