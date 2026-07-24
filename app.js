@@ -247,6 +247,28 @@ app.post('/addAnimal', checkAuthenticated, upload.single('image'), (req, res) =>
     });
 });
 
+app.get('/appointment', checkAuthenticated, (req, res) => {
+    const sql = 'SELECT * FROM appointment';
+    connection.query(sql, (error, results) => {
+        if (error) {
+            console.error('Error loading appointments:', error);
+            return res.status(500).send('Error loading appointments');
+        }
+        res.render('appointment', { appointment: results, user: req.session.user });
+    });
+});
+
+app.get('/appointmentAdmin', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = 'SELECT * FROM appointment';
+    connection.query(sql, (error, results) => {
+        if (error) {
+            console.error('Error loading admin appointments:', error);
+            return res.status(500).send('Error loading appointments');
+        }
+        res.render('appointmentAdmin', { appointment: results, user: req.session.user });
+    });
+});
+
 // Define a route to render the appointments page
 app.get('/addAppointment', checkAuthenticated, (req, res) => {
     res.render('addAppointment', { user: req.session.user });
@@ -269,7 +291,21 @@ app.post('/addAppointment', checkAuthenticated, (req, res) => {
             res.redirect('/appointment');
         }
     });
+
+    app.get('/deleteAppointment', checkAuthenticated, checkAdmin, (req, res) => {
+        const appointmentId = req.query.id;
+
+        connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error, results) => {
+            if (error) {
+                console.error('Error deleting appointment:', error);
+                return res.status(500).send('Error deleting appointment');
+            }
+            res.redirect('/appointmentAdmin');
+        });
+    });
+
 });
+
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
     res.render('contact', { user: req.session.user });
