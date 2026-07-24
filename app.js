@@ -1,9 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
-// use this for the team github thing
 const path = require("path");
 const multer = require('multer');
-//******** TODO: Insert code to import 'express-session' *********//
 const session = require('express-session');
 
 const flash = require('connect-flash');
@@ -49,7 +47,7 @@ app.use("/images", express.static(path.join(__dirname, 'public', 'images')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-//******** TODO: Insert code for Session Middleware below ********//
+//******** Insert code for Session Middleware below ********//
 app.use(session({
     secret: 'secret',
     resave: false,
@@ -60,7 +58,7 @@ app.use(session({
 
 app.use(flash());
 
-//******** TODO: Create a Middleware to check if user is logged in. ********//
+//******** Create a Middleware to check if user is logged in. ********//
 const checkAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
@@ -69,7 +67,7 @@ const checkAuthenticated = (req, res, next) => {
         res.redirect('/login');
     }
 };
-//******** TODO: Create a Middleware to check if user is admin. ********//
+//******** Create a Middleware to check if user is admin. ********//
 const checkAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
@@ -116,7 +114,7 @@ app.get('/register', (req, res) => {
 });
 
 
-//******** TODO: Create a middleware function validateRegistration ********//
+//******** Create a middleware function validateRegistration ********//
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
@@ -136,9 +134,9 @@ app.post('/about', (req, res) => {
     res.render('about', { user: req.session.user });
 });
 
-//******** TODO: Integrate validateRegistration into the register route. ********//
+//******** Integrate validateRegistration into the register route. ********//
 app.post('/register', validateRegistration, (req, res) => {
-    //******** TODO: Update register route to include role. ********//
+    //******** Update register route to include role. ********//
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
@@ -152,7 +150,7 @@ app.post('/register', validateRegistration, (req, res) => {
     });
 });
 
-//******** TODO: Insert code for login routes to render login page below ********//
+//******** Insert code for login routes to render login page below ********//
 app.get('/login', (req, res) => {
     res.render('login', {
         //retrieve success and error messages from the flash middleware and
@@ -162,7 +160,7 @@ app.get('/login', (req, res) => {
     });
 });
 
-//******** TODO: Insert code for login routes for form submission below ********//
+//******** Insert code for login routes for form submission below ********//
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
     // Validate email and password
@@ -192,7 +190,7 @@ app.post('/login', (req, res) => {
     });
 });
 
-//******** TODO: Insert code for logout route ********//
+//******** Insert code for logout route ********//
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
@@ -219,7 +217,7 @@ app.get('/animal/:id', checkAuthenticated, (req, res) => {
     });
 });
 
-// //******** TODO: Insert code for adding an animal ********//
+// //******** Insert code for adding an animal ********//
 app.get('/addAnimal', checkAuthenticated, (req, res) => {
     res.render('addAnimal', { user: req.session.user });
 });
@@ -272,102 +270,6 @@ app.post('/addAppointment', checkAuthenticated, (req, res) => {
         }
     });
 });
-
-// Define a route to view the appointment list (non-admin)
-app.get('/appointment', checkAuthenticated, (req, res) => {
-    const sql = 'SELECT * FROM appointment';
-    connection.query(sql, (error, results) => {
-        if (error) throw error;
-        res.render('appointment', {
-            appointment: results,
-            user: req.session.user,
-            messages: req.flash('success')
-        });
-    });
-});
-
-// Define a route to view a single appointment
-app.get('/appointment/:id', checkAuthenticated, (req, res) => {
-    const appointmentId = req.params.id;
-    const sql = 'SELECT * FROM appointment WHERE appointmentId = ?';
-
-    connection.query(sql, [appointmentId], (error, results) => {
-        if (error) throw error;
-
-        if (results.length > 0) {
-            res.render('appointment', {
-                appointment: results,
-                user: req.session.user,
-                messages: req.flash('success')
-            });
-        } else {
-            res.status(404).send('Appointment not found');
-        }
-    });
-});
-
-// Define a route to view the appointment list (admin)
-app.get('/appointmentAdmin', checkAuthenticated, checkAdmin, (req, res) => {
-    const sql = 'SELECT * FROM appointment';
-    connection.query(sql, (error, results) => {
-        if (error) throw error;
-        res.render('appointmentAdmin', {
-            appointment: results,
-            user: req.session.user,
-            messages: req.flash('success')
-        });
-    });
-});
-
-// Define a route to render the update appointment page
-app.get('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
-    const appointmentId = req.params.id;
-    const sql = 'SELECT * FROM appointment WHERE appointmentId = ?';
-
-    connection.query(sql, [appointmentId], (error, results) => {
-        if (error) throw error;
-
-        if (results.length > 0) {
-            res.render('updateAppointment', {
-                appointment: results[0],
-                user: req.session.user
-            });
-        } else {
-            res.status(404).send('Appointment not found');
-        }
-    });
-});
-
-app.post('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
-    const appointmentId = req.params.id;
-    const { userid, animalId, reason, appointmentdate, comments } = req.body;
-    const sql = 'UPDATE appointment SET userid = ?, animalId = ?, reason = ?, appointmentdate = ?, comments = ? WHERE appointmentId = ?';
-
-    connection.query(sql, [userid, animalId, reason, appointmentdate, comments, appointmentId], (error) => {
-        if (error) {
-            console.error('Error updating appointment:', error);
-            res.status(500).send('Error updating appointment');
-        } else {
-            req.flash('success', 'Appointment updated successfully!');
-            res.redirect('/appointmentAdmin');
-        }
-    });
-});
-
-// Define a route to delete an appointment
-app.get('/deleteAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
-    const appointmentId = req.params.id;
-
-    connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error) => {
-        if (error) {
-            console.error('Error deleting appointment:', error);
-            res.status(500).send('Error deleting appointment');
-        } else {
-            req.flash('success', 'Appointment deleted successfully!');
-            res.redirect('/appointmentAdmin');
-        }
-    });
-});
 //Define a route to render the contact us page
 app.get('/contact', (req, res) => {
     res.render('contact', { user: req.session.user });
@@ -396,61 +298,6 @@ app.get('/filter', (req, res) => {
             res.status(500).send("Error occurred while filtering animals");
         } else {
             res.render('filter', { animals: results, keyword: keyword, user: req.session.user });
-        }
-    });
-});
-
-// Define a route to render the update appointment page
-app.get('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
-    const appointmentId = req.params.id;
-    const sql = `SELECT * FROM appointment WHERE appointmentId = ?`;
-
-    // Fetch data from MySQL based on the appointment ID
-    connection.query(sql, [appointmentId], (error, results) => {
-        if (error) throw error;
-
-        // Check if any appointment with the given ID was found
-        if (results.length > 0) {
-            // Render HTML page with the appointment data
-            res.render('updateAppointment', { appointment: results[0], user: req.session.user });
-        } else {
-            // If no appointment with the given ID was found, render a 404 page or handle it accordingly
-            res.status(404).send('Appointment not found');
-        }
-    });
-});
-
-app.post('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
-    const appointmentId = req.params.id;
-    // Extract appointment data from the request body
-    const { userid, animalId, reason, appointmentdate, comments } = req.body;
-
-    const sql = `UPDATE appointment SET userid = ? , animalId = ?, reason = ?, appointmentdate = ?, comments = ? WHERE appointmentId = ?`;
-    // Update the appointment in the database
-    connection.query(sql, [userid, animalId, reason, appointmentdate, comments, appointmentId], (error, results) => {
-        if (error) {
-            // Handle any error that occurs during the database operation
-            console.error("Error updating appointment:", error);
-            res.status(500).send('Error updating appointment');
-        } else {
-            // Send a success response
-            res.redirect('/appointmentAdmin');
-        }
-    });
-});
-
-// Define a route to delete an Appointment
-app.get('/deleteAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
-    const appointmentId = req.params.id;
-
-    connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error, results) => {
-        if (error) {
-            // Handle any error that occurs during the database operation
-            console.error("Error deleting appointment:", error);
-            res.status(500).send('Error deleting appointment');
-        } else {
-            // Send a success response
-            res.redirect('/appointmentAdmin');
         }
     });
 });
