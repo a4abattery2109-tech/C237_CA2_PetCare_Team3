@@ -400,6 +400,61 @@ app.get('/filter', (req, res) => {
     });
 });
 
+// Define a route to render the update appointment page
+app.get('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+    const sql = `SELECT * FROM appointment WHERE appointmentId = ?`;
+
+    // Fetch data from MySQL based on the appointment ID
+    connection.query(sql, [appointmentId], (error, results) => {
+        if (error) throw error;
+
+        // Check if any appointment with the given ID was found
+        if (results.length > 0) {
+            // Render HTML page with the appointment data
+            res.render('updateAppointment', { appointment: results[0], user: req.session.user });
+        } else {
+            // If no appointment with the given ID was found, render a 404 page or handle it accordingly
+            res.status(404).send('Appointment not found');
+        }
+    });
+});
+
+app.post('/updateAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+    // Extract appointment data from the request body
+    const { userid, animalId, reason, appointmentdate, comments } = req.body;
+
+    const sql = `UPDATE appointment SET userid = ? , animalId = ?, reason = ?, appointmentdate = ?, comments = ? WHERE appointmentId = ?`;
+    // Update the appointment in the database
+    connection.query(sql, [userid, animalId, reason, appointmentdate, comments, appointmentId], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error updating appointment:", error);
+            res.status(500).send('Error updating appointment');
+        } else {
+            // Send a success response
+            res.redirect('/appointmentAdmin');
+        }
+    });
+});
+
+// Define a route to delete an Appointment
+app.get('/deleteAppointment/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const appointmentId = req.params.id;
+
+    connection.query('DELETE FROM appointment WHERE appointmentId = ?', [appointmentId], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error deleting appointment:", error);
+            res.status(500).send('Error deleting appointment');
+        } else {
+            // Send a success response
+            res.redirect('/appointmentAdmin');
+        }
+    });
+});
+
 // Define a route to render the update animal page
 app.get('/updateAnimal/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const animalId = req.params.id;
