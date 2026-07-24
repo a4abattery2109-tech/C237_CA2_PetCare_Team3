@@ -11,6 +11,16 @@ const flash = require('connect-flash');
 const app = express();
 
 // Set up multer for file uploads
+multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'images/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 // Local connection
 //const db = mysql.createConnection({
@@ -158,7 +168,7 @@ app.post('/login', (req, res) => {
             // Successful login
             req.session.user = results[0]; // store user in session
             req.flash('success', 'Login successful!');
-            res.redirect('/dashboard');
+                res.redirect('/dashboard');
         } else {
             // Invalid credentials
             req.flash('error', 'Invalid email or password.');
@@ -188,7 +198,7 @@ app.get('/addAnimal', checkAuthenticated, checkAdmin, (req, res) => {
 
 app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (req, res) => {
     // Extract animal data from the request body
-    const { animalName, species, injury } = req.body;
+    const { animalName, species, injury, history} = req.body;
     let image;
     if (req.file) {
         image = req.file.filename; // Save only the filename
@@ -196,9 +206,9 @@ app.post('/addAnimal', checkAuthenticated, checkAdmin, upload.single('image'), (
         image = null;
     }
 
-    const sql = 'INSERT INTO animal (animalName, species, injury, image) VALUES (?, ?, ?, ?)';
+    const sql = 'INSERT INTO animal (animalName, species, injury, history, image) VALUES (?, ?, ?, ?, ?)';
     // Insert the new animal into the database
-    connection.query(sql, [animalName, species, injury, image], (error, results) => {
+    connection.query(sql, [animalName, species, injury, history, image], (error, results) => {
         if (error) {
             // Handle any error that occurs during the database operation
             console.error("Error adding animal:", error);
