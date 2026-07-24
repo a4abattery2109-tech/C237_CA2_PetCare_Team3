@@ -84,7 +84,7 @@ const checkAdmin = (req, res, next) => {
         return next();
     } else {
         req.flash('error', 'Access denied');
-        res.redirect('/dashboard');
+        res.redirect('/');
     }
 };
 // Routes
@@ -168,7 +168,7 @@ app.post('/login', (req, res) => {
             // Successful login
             req.session.user = results[0]; // store user in session
             req.flash('success', 'Login successful!');
-                res.redirect('/dashboard');
+                res.redirect('/');
         } else {
             // Invalid credentials
             req.flash('error', 'Invalid email or password.');
@@ -177,8 +177,8 @@ app.post('/login', (req, res) => {
     });
 });
 //******** TODO: Insert code for dashboard route to render dashboard page for users. ********//
-app.get('/dashboard', checkAuthenticated, (req, res) => {
-    res.render('dashboard', { user: req.session.user });
+app.get('/', checkAuthenticated, (req, res) => {
+    res.render('/', { user: req.session.user });
 });
 //******** TODO: Insert code for admin route to render dashboard page for admin. ********//
 app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
