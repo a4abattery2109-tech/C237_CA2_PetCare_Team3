@@ -77,6 +77,9 @@ const checkAdmin = (req, res, next) => {
         req.flash('error', 'Access denied');
         res.redirect('/animal');
     }
+
+    req.flash('error', 'Access denied. Admin only.');
+    return res.redirect('/dashboard');
 };
 
 // Routes
