@@ -33,7 +33,9 @@
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Services we offer
           </a>
+
           <% const animalLink = (typeof user !== 'undefined' && user && user.role === 'admin') ? '/animalAdmin' : '/animal'; %>
+
           <ul class="dropdown-menu">
             <li>
               <a class="dropdown-item" href="/addAnimal">Add Animal</a>
@@ -50,6 +52,14 @@
           </ul>
         </li>
 
+        <% if (typeof user !== 'undefined' && user) { %>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/logout">Logout</a>
+        </li>
+
+        <% } else { %>
+
         <!-- Login and Register dropdown -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -65,9 +75,12 @@
           </ul>
         </li>
 
+        <% } %>
+
         <li class="nav-item">
           <a class="nav-link" href="/contact">Contact Us</a>
         </li>
+
       </ul>
     </div>
   </div>
