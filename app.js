@@ -8,7 +8,15 @@ const session = require('express-session');
 
 const flash = require('connect-flash');
 
-const upload = multer({ dest: path.join(__dirname, 'public', 'images') });
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, 'public', 'images'));
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 const app = express();
 
