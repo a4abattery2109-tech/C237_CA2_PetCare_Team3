@@ -268,7 +268,7 @@ app.post('/contact', (req, res) => {
 
 // define a route to render filtering
 app.get('/filter', (req, res) => {
-    const keyword = req.query.keyword;
+    const keyword = req.query.keyword || '';
     let sql = 'SELECT * FROM animal';
     let params = [];
 
